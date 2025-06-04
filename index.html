@@ -1,191 +1,264 @@
-<!DOCTYPE html><html lang="en"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#ffffff" />
-    <link rel="manifest" href="manifest.json">
-    <title>Smart Goal Tracker</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background-color: #0077cc;
-            color: white;
-            padding: 1rem;
-            text-align: center;
-        }
-        section {
-            margin: 1rem;
-            padding: 1rem;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        label {
-            display: block;
-            margin-top: 0.5rem;
-        }
-        input, select, button {
-            padding: 0.5rem;
-            margin-top: 0.2rem;
-            width: 100%;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        th, td {
-            padding: 0.5rem;
-            text-align: center;
-        }
-        .status-green { background-color: #d4edda; }
-        .status-orange { background-color: #fff3cd; }
-        .status-red { background-color: #f8d7da; }
-    </style>
-</head><body>
-    <header>
-        <h1>Smart Goal Tracker</h1>
-    </header><section>
-    <h2>Enter Progress</h2>
-    <label for="goalSelect">Select Goal</label>
-    <select id="goalSelect"></select>
-
-    <label for="progressDate">Date</label>
-    <input type="date" id="progressDate">
-
-    <label for="progressValue">Value (Amount, Time, Yes/No)</label>
-    <input type="text" id="progressValue">
-
-    <button onclick="addProgress()">Add Progress</button>
-</section>
-
-<section>
-    <h2>Add/Edit Goal</h2>
-    <label for="goalName">Goal Name</label>
-    <input type="text" id="goalName">
-
-    <label for="goalType">Goal Type</label>
-    <select id="goalType">
-        <option value="amount">Amount</option>
-        <option value="yesno">Yes/No</option>
-        <option value="time">Time</option>
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Goal Tracker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    header {
+      background-color: #4CAF50;
+      color: white;
+      padding: 1em;
+      text-align: center;
+    }
+    .container {
+      padding: 1em;
+    }
+    .section {
+      margin-bottom: 1.5em;
+      background: #fff;
+      padding: 1em;
+      border-radius: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .section-title {
+      margin-bottom: 0.5em;
+      font-weight: bold;
+    }
+    input, select, button {
+      padding: 0.5em;
+      margin: 0.3em 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1em;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 0.5em;
+      text-align: center;
+    }
+    .status-green { background-color: #d4edda; }
+    .status-orange { background-color: #fff3cd; }
+    .status-red { background-color: #f8d7da; }
+    .action-btns i {
+      margin: 0 0.3em;
+      cursor: pointer;
+    }
+    .export-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1em;
+    }
+    .export-btn img {
+      width: 150px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body><header>
+  <h1>🎯 Smart Goal & Habit Tracker</h1>
+</header><div class="container">  <div class="section" id="goal-entry-section" style="background-color: #e8f5e9">
+    <div class="section-title">Add a New Goal</div>
+    <input type="text" id="goalName" placeholder="Goal Name">
+    <select id="goalType" onchange="handleGoalTypeChange()">
+      <option value="amount">Target Amount</option>
+      <option value="yesno">Yes/No Type</option>
+      <option value="time">Time-Based</option>
     </select>
-
-    <label for="targetAmount">Target Amount (if applicable)</label>
-    <input type="number" id="targetAmount">
-
-    <label for="targetUnit">Target Unit</label>
-    <input type="text" id="targetUnit">
-
-    <label for="startDate">Start Date</label>
+    <input type="number" id="targetAmount" placeholder="Target Amount">
+    <input type="text" id="unit" placeholder="Unit (e.g. kg, hours)">
     <input type="date" id="startDate">
-
-    <label for="endDate">End Date</label>
     <input type="date" id="endDate">
-
     <button onclick="saveGoal()">Save Goal</button>
-</section>
-
-<section>
-    <h2>Goals Summary</h2>
-    <div id="goalsTableContainer"></div>
-</section>
-
-<section>
-    <h2>Progress Graph</h2>
+  </div>  <div class="section" id="progress-entry-section" style="background-color: #e3f2fd">
+    <div class="section-title">Add Progress</div>
+    <select id="goalSelect"></select>
+    <input type="date" id="progressDate">
+    <input type="text" id="progressAmount" placeholder="Progress / Yes / No / Time">
+    <button onclick="addProgress()">Add Progress</button>
+  </div>  <div class="section" style="background-color: #fff8e1">
+    <div class="section-title">All Goals Summary</div>
+    <table id="goalTable">
+      <thead>
+        <tr>
+          <th>Goal</th>
+          <th>Type</th>
+          <th>Target</th>
+          <th>Progress</th>
+          <th>% Complete</th>
+          <th>Status</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>  <div class="section" style="background-color: #ede7f6">
+    <div class="section-title">📈 Progress Chart</div>
     <canvas id="progressChart"></canvas>
-</section>
+  </div>  <div class="section export-btn">
+    <img src="https://www.gstatic.com/images/branding/product/1x/sheets_2020q4_48dp.png" alt="Export to Google Sheets" onclick="exportToGoogleSheets()">
+  </div></div><script>
+  let goals = JSON.parse(localStorage.getItem('goals') || '[]');
+  let progress = JSON.parse(localStorage.getItem('progress') || '[]');
 
-<script>
-    let goals = JSON.parse(localStorage.getItem('goals') || '[]');
-    let progress = JSON.parse(localStorage.getItem('progress') || '[]');
+  function handleGoalTypeChange() {
+    const type = document.getElementById('goalType').value;
+    const targetAmount = document.getElementById('targetAmount');
+    const unit = document.getElementById('unit');
 
-    function saveGoal() {
-        const goal = {
-            id: Date.now(),
-            name: document.getElementById('goalName').value,
-            type: document.getElementById('goalType').value,
-            targetAmount: parseFloat(document.getElementById('targetAmount').value) || 0,
-            unit: document.getElementById('targetUnit').value,
-            start: document.getElementById('startDate').value,
-            end: document.getElementById('endDate').value
-        };
-        goals.push(goal);
-        localStorage.setItem('goals', JSON.stringify(goals));
-        renderGoals();
+    if (type === 'yesno') {
+      targetAmount.style.display = 'none';
+      unit.style.display = 'none';
+    } else {
+      targetAmount.style.display = 'inline';
+      unit.style.display = 'inline';
     }
+  }
 
-    function addProgress() {
-        const goalId = parseInt(document.getElementById('goalSelect').value);
-        const date = document.getElementById('progressDate').value || new Date().toISOString().split('T')[0];
-        let value = document.getElementById('progressValue').value.trim().toLowerCase();
-        if (value === 'y') value = 'yes';
-        if (value === 'n') value = 'no';
-        progress.push({ goalId, date, value });
-        localStorage.setItem('progress', JSON.stringify(progress));
-        renderGoals();
-    }
+  function saveGoal() {
+    const goal = {
+      name: document.getElementById('goalName').value,
+      type: document.getElementById('goalType').value,
+      target: document.getElementById('targetAmount').value,
+      unit: document.getElementById('unit').value,
+      start: document.getElementById('startDate').value,
+      end: document.getElementById('endDate').value
+    };
+    goals.push(goal);
+    localStorage.setItem('goals', JSON.stringify(goals));
+    populateGoals();
+    renderTable();
+  }
 
-    function renderGoals() {
-        document.getElementById('goalSelect').innerHTML = goals.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
-        const table = `<table><tr><th>Name</th><th>Type</th><th>Progress</th><th>Status</th></tr>` +
-            goals.map(goal => {
-                const logs = progress.filter(p => p.goalId === goal.id);
-                let progressValue = 0;
-                if (goal.type === 'amount') {
-                    progressValue = logs.reduce((sum, l) => sum + parseFloat(l.value || 0), 0);
-                } else if (goal.type === 'yesno') {
-                    progressValue = logs.filter(l => l.value === 'yes').length;
-                } else if (goal.type === 'time') {
-                    progressValue = logs.length; // just count entries
-                }
-                const percentage = goal.targetAmount ? (progressValue / goal.targetAmount) * 100 : 0;
-                let statusClass = 'status-green';
-                if (percentage < 33) statusClass = 'status-red';
-                else if (percentage < 66) statusClass = 'status-orange';
+  function populateGoals() {
+    const select = document.getElementById('goalSelect');
+    select.innerHTML = '';
+    goals.forEach((g, i) => {
+      const option = document.createElement('option');
+      option.value = i;
+      option.textContent = g.name;
+      select.appendChild(option);
+    });
+  }
 
-                return `<tr class="${statusClass}"><td>${goal.name}</td><td>${goal.type}</td><td>${progressValue} ${goal.unit || ''}</td><td>${percentage.toFixed(1)}%</td></tr>`;
-            }).join('') + '</table>';
-        document.getElementById('goalsTableContainer').innerHTML = table;
-        updateChart();
-    }
+  function addProgress() {
+    const goalIndex = document.getElementById('goalSelect').value;
+    const date = document.getElementById('progressDate').value || new Date().toISOString().split('T')[0];
+    let amount = document.getElementById('progressAmount').value;
+    if (amount.toLowerCase() === 'y') amount = 'Yes';
+    if (amount.toLowerCase() === 'n') amount = 'No';
 
-    function updateChart() {
-        const ctx = document.getElementById('progressChart').getContext('2d');
-        const chartData = goals.map(g => {
-            const logs = progress.filter(p => p.goalId === g.id);
-            if (g.type === 'amount') return logs.reduce((sum, l) => sum + parseFloat(l.value || 0), 0);
-            if (g.type === 'yesno') return logs.filter(l => l.value === 'yes').length;
-            return logs.length;
-        });
-        const chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: goals.map(g => g.name),
-                datasets: [{
-                    label: 'Progress',
-                    data: chartData,
-                    backgroundColor: '#0077cc'
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
-        });
-    }
+    progress.push({ goalIndex, date, amount, time: new Date().toLocaleTimeString() });
+    localStorage.setItem('progress', JSON.stringify(progress));
+    renderTable();
+    renderChart();
+  }
 
-    renderGoals();
-</script>
+  function renderTable() {
+    const tbody = document.querySelector('#goalTable tbody');
+    tbody.innerHTML = '';
 
-</body></html>
+    goals.forEach((goal, i) => {
+      const goalProgress = progress.filter(p => parseInt(p.goalIndex) === i);
+      let total = 0;
+
+      if (goal.type === 'amount') {
+        total = goalProgress.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      } else if (goal.type === 'yesno') {
+        total = goalProgress.filter(p => p.amount === 'Yes').length;
+      } else if (goal.type === 'time') {
+        total = goalProgress.length;
+      }
+
+      const percent = goal.type === 'amount' ? (total / goal.target * 100).toFixed(1) : 'N/A';
+      const statusClass = percent >= 80 ? 'status-green' : percent >= 40 ? 'status-orange' : 'status-red';
+
+      const row = document.createElement('tr');
+      row.className = statusClass;
+      row.innerHTML = `
+        <td>${goal.name}</td>
+        <td>${goal.type}</td>
+        <td>${goal.target || '-'}</td>
+        <td>${total} ${goal.unit || ''}</td>
+        <td>${percent}</td>
+        <td>${statusClass.replace('status-', '')}</td>
+        <td>${goal.start}</td>
+        <td>${goal.end}</td>
+        <td class="action-btns">
+          <i class="fas fa-edit"></i>
+          <i class="fas fa-trash" onclick="deleteGoal(${i})"></i>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  function deleteGoal(index) {
+    goals.splice(index, 1);
+    localStorage.setItem('goals', JSON.stringify(goals));
+    progress = progress.filter(p => parseInt(p.goalIndex) !== index);
+    localStorage.setItem('progress', JSON.stringify(progress));
+    populateGoals();
+    renderTable();
+  }
+
+  function renderChart() {
+    const ctx = document.getElementById('progressChart').getContext('2d');
+    const labels = goals.map(g => g.name);
+    const data = goals.map((g, i) => {
+      const gp = progress.filter(p => parseInt(p.goalIndex) === i);
+      if (g.type === 'amount') {
+        return gp.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      } else if (g.type === 'yesno') {
+        return gp.filter(p => p.amount === 'Yes').length;
+      }
+      return gp.length;
+    });
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Progress',
+          data,
+          backgroundColor: '#42a5f5'
+        }]
+      }
+    });
+  }
+
+  function exportToGoogleSheets() {
+    alert('Google Sheets export is a premium feature or needs integration with Google Apps Script.');
+  }
+
+  populateGoals();
+  renderTable();
+  renderChart();
+</script></body>
+</html>
