@@ -1,183 +1,180 @@
-<!DOCTYPE html><html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Habit & Goal Tracker</title>
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Goal & Habit Tracker</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 1rem;
-      background: #f7f7f7;
+      background-color: #f4f4f4;
+      padding: 20px;
     }
-    h1, h2 {
-      text-align: center;
+    h2 {
+      color: #333;
     }
-    form, table {
-      margin: 1rem auto;
-      width: 95%;
-      max-width: 800px;
-      background: white;
-      padding: 1rem;
+    .section {
+      margin-bottom: 30px;
+      background: #fff;
+      padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
-    label {
+    label, input, select, button {
       display: block;
-      margin-top: 0.5rem;
-    }
-    input, select {
       width: 100%;
-      padding: 0.5rem;
-      margin-top: 0.25rem;
+      margin-bottom: 10px;
     }
     table {
+      width: 100%;
       border-collapse: collapse;
+      margin-top: 20px;
     }
     th, td {
-      padding: 0.5rem;
+      padding: 10px;
       border: 1px solid #ccc;
-      text-align: center;
+      text-align: left;
     }
     .actions button {
-      margin: 0 5px;
+      margin-right: 5px;
     }
   </style>
-</head>
-<body>
-  <h1>Habit & Goal Tracker</h1>  <form id="entryForm">
-    <h2>Daily Entry</h2>
-    <label for="entryGoal">Select Goal:</label>
-    <select id="entryGoal"></select>
-    <label for="entryDate">Date:</label>
-    <input type="date" id="entryDate" />
-    <label for="progress">Progress Amount:</label>
-    <input type="number" id="progress" />
-    <button type="submit">Add Entry</button>
-  </form>  <form id="taskForm">
-    <h2>Add / Edit Goal or Habit</h2>
-    <input type="hidden" id="editId" />
-    <label for="goal">Goal Name:</label>
-    <input type="text" id="goal" />
-    <label for="target">Target Amount:</label>
-    <input type="number" id="target" />
-    <label for="unit">Target Unit:</label>
-    <input type="text" id="unit" />
-    <label for="start">Start Date:</label>
-    <input type="date" id="start" />
-    <label for="end">End Date:</label>
-    <input type="date" id="end" />
-    <button type="submit">Save Habit</button>
-  </form>  <h2 style="text-align:center">Your Goals</h2>
-  <table id="taskTable">
-    <thead>
-      <tr>
-        <th>Goal</th><th>Target</th><th>Unit</th><th>Start</th><th>End</th>
-        <th>Days Completed</th><th>Days Remaining</th><th>Required Speed</th>
-        <th>Current Speed</th><th>Actions</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>  <script>
-    const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-    const entries = JSON.parse(localStorage.getItem("entries") || "[]");
+</head><body>
+  <h2>Enter Daily Progress</h2>
+  <div class="section">
+    <label for="progress-goal">Select Goal</label>
+    <select id="progress-goal"></select>
+    <label for="progress-date">Date</label>
+    <input type="date" id="progress-date">
+    <label for="progress-amount">Amount Done</label>
+    <input type="number" id="progress-amount" placeholder="e.g. 5">
+    <button onclick="addProgress()">Add Progress</button>
+  </div>  <h2>Create or Update Goal</h2>
+  <div class="section">
+    <label for="goal-name">Goal Name</label>
+    <input type="text" id="goal-name">
+    <label for="target-amount">Target Amount</label>
+    <input type="number" id="target-amount">
+    <label for="target-unit">Target Unit</label>
+    <input type="text" id="target-unit">
+    <label for="start-date">Start Date</label>
+    <input type="date" id="start-date">
+    <label for="end-date">End Date</label>
+    <input type="date" id="end-date">
+    <button onclick="saveGoal()">Save Goal</button>
+  </div>  <h2>Goals Overview</h2>
+  <div class="section">
+    <table id="goals-table">
+      <thead>
+        <tr>
+          <th>Goal</th>
+          <th>Target</th>
+          <th>Progress</th>
+          <th>Speed</th>
+          <th>Required</th>
+          <th>Days</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>  <script>
+    const goals = JSON.parse(localStorage.getItem('goals') || '[]');
+    const progress = JSON.parse(localStorage.getItem('progress') || '{}');
 
-    function saveTasks() {
-      localStorage.setItem("tasks", JSON.stringify(tasks));
+    function saveGoal() {
+      const name = document.getElementById('goal-name').value;
+      const amount = +document.getElementById('target-amount').value;
+      const unit = document.getElementById('target-unit').value;
+      const startDate = document.getElementById('start-date').value;
+      const endDate = document.getElementById('end-date').value;
+      const existing = goals.find(g => g.name === name);
+
+      if (existing) {
+        Object.assign(existing, { amount, unit, startDate, endDate });
+      } else {
+        goals.push({ name, amount, unit, startDate, endDate });
+      }
+
+      localStorage.setItem('goals', JSON.stringify(goals));
+      renderGoals();
+      updateGoalOptions();
     }
 
-    function saveEntries() {
-      localStorage.setItem("entries", JSON.stringify(entries));
+    function addProgress() {
+      const name = document.getElementById('progress-goal').value;
+      const date = document.getElementById('progress-date').value;
+      const amt = +document.getElementById('progress-amount').value;
+
+      if (!progress[name]) progress[name] = [];
+      progress[name].push({ date, amt });
+
+      localStorage.setItem('progress', JSON.stringify(progress));
+      renderGoals();
     }
 
-    function renderTaskTable() {
-      const tbody = document.querySelector("#taskTable tbody");
-      tbody.innerHTML = "";
-      document.getElementById("entryGoal").innerHTML = "";
-      tasks.forEach((task, i) => {
-        const daysTotal = (new Date(task.end) - new Date(task.start)) / (1000 * 3600 * 24);
-        const daysDone = (new Date() - new Date(task.start)) / (1000 * 3600 * 24);
-        const goalEntries = entries.filter(e => e.goal === task.goal);
-        const progressSum = goalEntries.reduce((a, e) => a + Number(e.progress), 0);
-        const requiredSpeed = task.target / daysTotal;
-        const currentSpeed = progressSum / daysDone;
-        const tr = document.createElement("tr");
+    function renderGoals() {
+      const tbody = document.querySelector('#goals-table tbody');
+      tbody.innerHTML = '';
+
+      goals.forEach(goal => {
+        const prog = (progress[goal.name] || []).reduce((sum, p) => sum + p.amt, 0);
+        const totalDays = Math.ceil((new Date(goal.endDate) - new Date(goal.startDate)) / (1000 * 60 * 60 * 24));
+        const daysPassed = Math.ceil((new Date() - new Date(goal.startDate)) / (1000 * 60 * 60 * 24));
+        const requiredSpeed = goal.amount / totalDays;
+        const actualSpeed = prog / daysPassed;
+
+        const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${task.goal}</td>
-          <td>${task.target}</td>
-          <td>${task.unit}</td>
-          <td>${task.start}</td>
-          <td>${task.end}</td>
-          <td>${Math.floor(daysDone)}</td>
-          <td>${Math.ceil(daysTotal - daysDone)}</td>
+          <td>${goal.name}</td>
+          <td>${goal.amount} ${goal.unit}</td>
+          <td>${prog} ${goal.unit}</td>
+          <td>${actualSpeed.toFixed(2)}</td>
           <td>${requiredSpeed.toFixed(2)}</td>
-          <td>${currentSpeed.toFixed(2)}</td>
+          <td>${daysPassed}/${totalDays}</td>
           <td class="actions">
-            <button onclick="editTask(${i})">✏️</button>
-            <button onclick="deleteTask(${i})">🗑️</button>
+            <button onclick="editGoal('${goal.name}')">Edit</button>
+            <button onclick="deleteGoal('${goal.name}')">Delete</button>
           </td>
         `;
         tbody.appendChild(tr);
-
-        // add to dropdown
-        const opt = document.createElement("option");
-        opt.value = task.goal;
-        opt.textContent = task.goal;
-        document.getElementById("entryGoal").appendChild(opt);
       });
     }
 
-    function editTask(index) {
-      const t = tasks[index];
-      document.getElementById("editId").value = index;
-      document.getElementById("goal").value = t.goal;
-      document.getElementById("target").value = t.target;
-      document.getElementById("unit").value = t.unit;
-      document.getElementById("start").value = t.start;
-      document.getElementById("end").value = t.end;
+    function editGoal(name) {
+      const g = goals.find(g => g.name === name);
+      document.getElementById('goal-name').value = g.name;
+      document.getElementById('target-amount').value = g.amount;
+      document.getElementById('target-unit').value = g.unit;
+      document.getElementById('start-date').value = g.startDate;
+      document.getElementById('end-date').value = g.endDate;
     }
 
-    function deleteTask(index) {
-      if (confirm("Delete this goal?")) {
-        tasks.splice(index, 1);
-        saveTasks();
-        renderTaskTable();
+    function deleteGoal(name) {
+      const i = goals.findIndex(g => g.name === name);
+      if (i > -1) {
+        if (confirm("Delete this goal?")) {
+          goals.splice(i, 1);
+          delete progress[name];
+          localStorage.setItem('goals', JSON.stringify(goals));
+          localStorage.setItem('progress', JSON.stringify(progress));
+          renderGoals();
+          updateGoalOptions();
+        }
       }
     }
 
-    document.getElementById("taskForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const goal = document.getElementById("goal").value;
-      const target = document.getElementById("target").value;
-      const unit = document.getElementById("unit").value;
-      const start = document.getElementById("start").value;
-      const end = document.getElementById("end").value;
-      const editId = document.getElementById("editId").value;
+    function updateGoalOptions() {
+      const sel = document.getElementById('progress-goal');
+      sel.innerHTML = '';
+      goals.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g.name;
+        opt.textContent = g.name;
+        sel.appendChild(opt);
+      });
+    }
 
-      const task = { goal, target, unit, start, end };
-
-      if (editId) {
-        tasks[editId] = task;
-      } else {
-        tasks.push(task);
-      }
-
-      saveTasks();
-      renderTaskTable();
-      this.reset();
-    });
-
-    document.getElementById("entryForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const goal = document.getElementById("entryGoal").value;
-      const date = document.getElementById("entryDate").value;
-      const progress = document.getElementById("progress").value;
-      if (!goal || !date || !progress) return alert("Fill all entry fields");
-      entries.push({ goal, date, progress });
-      saveEntries();
-      renderTaskTable();
-      this.reset();
-    });
-
-    renderTaskTable();
-  </script></body>
-</html>
+    // Initialize
+    renderGoals();
+    updateGoalOptions();
+    document.getElementById('progress-date').valueAsDate = new Date();
+  </script></body></html>
