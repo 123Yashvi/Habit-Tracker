@@ -1,219 +1,191 @@
-<!DOCTYPE html><html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart Goal Tracker</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f9; }
-    h1 { color: #333; }
-    .section { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    label { display: block; margin-top: 10px; font-weight: bold; }
-    input, select { padding: 8px; margin-top: 5px; width: 100%; border-radius: 5px; border: 1px solid #ccc; }
-    button { padding: 10px 20px; border: none; border-radius: 5px; margin-top: 10px; font-weight: bold; cursor: pointer; }
-    #saveGoalBtn { background-color: #007BFF; color: white; }
-    #addProgressBtn { background-color: #28A745; color: white; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
-    th { background-color: #007BFF; color: white; }
-    .status-green { background-color: #d4edda; }
-    .status-yellow { background-color: #fff3cd; }
-    .status-red { background-color: #f8d7da; }
-    .goal-yesno select, .goal-time input[type='time'] { display: none; }
-  </style>
-</head>
-<body>
-  <h1>🎯 Smart Goal Tracker</h1>  <div class="section">
-    <h2>Add New Goal</h2>
-    <label>Goal Name</label>
-    <input type="text" id="goalName" /><label>Goal Type</label>
-<select id="goalType" onchange="adjustGoalInputs()">
-  <option value="number">Count/Amount</option>
-  <option value="yesno">Yes / No</option>
-  <option value="time">Time</option>
-  <option value="info">Just Info</option>
-</select>
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="manifest" href="manifest.json">
+    <title>Smart Goal Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #0077cc;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        section {
+            margin: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-top: 0.5rem;
+        }
+        input, select, button {
+            padding: 0.5rem;
+            margin-top: 0.2rem;
+            width: 100%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 0.5rem;
+            text-align: center;
+        }
+        .status-green { background-color: #d4edda; }
+        .status-orange { background-color: #fff3cd; }
+        .status-red { background-color: #f8d7da; }
+    </style>
+</head><body>
+    <header>
+        <h1>Smart Goal Tracker</h1>
+    </header><section>
+    <h2>Enter Progress</h2>
+    <label for="goalSelect">Select Goal</label>
+    <select id="goalSelect"></select>
 
-<div id="goalAmountDiv">
-  <label>Target Amount</label>
-  <input type="number" id="targetAmount" />
+    <label for="progressDate">Date</label>
+    <input type="date" id="progressDate">
 
-  <label>Target Unit</label>
-  <input type="text" id="targetUnit" />
-</div>
+    <label for="progressValue">Value (Amount, Time, Yes/No)</label>
+    <input type="text" id="progressValue">
 
-<div id="goalYesNoDiv" style="display:none">
-  <label>Expected Answer</label>
-  <select id="yesNoExpected">
-    <option value="Yes">Yes</option>
-    <option value="No">No</option>
-  </select>
-</div>
+    <button onclick="addProgress()">Add Progress</button>
+</section>
 
-<label>Start Date</label>
-<input type="date" id="startDate" />
+<section>
+    <h2>Add/Edit Goal</h2>
+    <label for="goalName">Goal Name</label>
+    <input type="text" id="goalName">
 
-<label>Target End Date</label>
-<input type="date" id="targetDate" />
+    <label for="goalType">Goal Type</label>
+    <select id="goalType">
+        <option value="amount">Amount</option>
+        <option value="yesno">Yes/No</option>
+        <option value="time">Time</option>
+    </select>
 
-<button id="saveGoalBtn" onclick="saveGoal()">Save Goal</button>
+    <label for="targetAmount">Target Amount (if applicable)</label>
+    <input type="number" id="targetAmount">
 
-  </div>  <div class="section">
-    <h2>📅 Daily Progress Entry</h2>
-    <label>Select Goal</label>
-    <select id="goalSelect"></select><div id="progressYesNoDiv" style="display:none">
-  <label>Your Answer</label>
-  <select id="progressYesNo">
-    <option value="Yes">Yes</option>
-    <option value="No">No</option>
-  </select>
-</div>
+    <label for="targetUnit">Target Unit</label>
+    <input type="text" id="targetUnit">
 
-<div id="progressAmountDiv">
-  <label>Enter Progress</label>
-  <input type="number" id="progressAmount" />
-</div>
+    <label for="startDate">Start Date</label>
+    <input type="date" id="startDate">
 
-<div id="progressTimeDiv" style="display:none">
-  <label>Enter Time</label>
-  <input type="time" id="progressTime" />
-</div>
+    <label for="endDate">End Date</label>
+    <input type="date" id="endDate">
 
-<label>Date</label>
-<input type="date" id="progressDate" />
+    <button onclick="saveGoal()">Save Goal</button>
+</section>
 
-<button id="addProgressBtn" onclick="addProgress()">Add Progress</button>
+<section>
+    <h2>Goals Summary</h2>
+    <div id="goalsTableContainer"></div>
+</section>
 
-  </div>  <div class="section">
-    <h2>📊 Your Goals</h2>
-    <table id="goalsTable">
-      <thead>
-        <tr>
-          <th>Goal</th>
-          <th>Type</th>
-          <th>Target</th>
-          <th>Start</th>
-          <th>End</th>
-          <th>Progress</th>
-          <th>% Done</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>  <script>
-    const goals = JSON.parse(localStorage.getItem("goals") || "[]");
-    const progress = JSON.parse(localStorage.getItem("progress") || "[]");
+<section>
+    <h2>Progress Graph</h2>
+    <canvas id="progressChart"></canvas>
+</section>
 
-    function adjustGoalInputs() {
-      const type = document.getElementById("goalType").value;
-      document.getElementById("goalAmountDiv").style.display = type === "number" ? "block" : "none";
-      document.getElementById("goalYesNoDiv").style.display = type === "yesno" ? "block" : "none";
-    }
+<script>
+    let goals = JSON.parse(localStorage.getItem('goals') || '[]');
+    let progress = JSON.parse(localStorage.getItem('progress') || '[]');
 
     function saveGoal() {
-      const name = document.getElementById("goalName").value;
-      const type = document.getElementById("goalType").value;
-      const start = document.getElementById("startDate").value;
-      const end = document.getElementById("targetDate").value;
-      let target = "";
-      let unit = "";
-      let expected = "";
-
-      if (type === "number") {
-        target = +document.getElementById("targetAmount").value;
-        unit = document.getElementById("targetUnit").value;
-      } else if (type === "yesno") {
-        expected = document.getElementById("yesNoExpected").value;
-      }
-
-      goals.push({ name, type, target, unit, expected, start, end });
-      localStorage.setItem("goals", JSON.stringify(goals));
-      populateGoals();
-    }
-
-    function populateGoals() {
-      const goalSelect = document.getElementById("goalSelect");
-      goalSelect.innerHTML = "";
-      goals.forEach((g, i) => {
-        const option = document.createElement("option");
-        option.value = i;
-        option.text = g.name;
-        goalSelect.add(option);
-      });
-      renderGoalsTable();
+        const goal = {
+            id: Date.now(),
+            name: document.getElementById('goalName').value,
+            type: document.getElementById('goalType').value,
+            targetAmount: parseFloat(document.getElementById('targetAmount').value) || 0,
+            unit: document.getElementById('targetUnit').value,
+            start: document.getElementById('startDate').value,
+            end: document.getElementById('endDate').value
+        };
+        goals.push(goal);
+        localStorage.setItem('goals', JSON.stringify(goals));
+        renderGoals();
     }
 
     function addProgress() {
-      const goalIdx = document.getElementById("goalSelect").value;
-      const goal = goals[goalIdx];
-      const date = document.getElementById("progressDate").value || new Date().toISOString().slice(0,10);
-      let value = "";
-
-      if (goal.type === "yesno") {
-        value = document.getElementById("progressYesNo").value;
-      } else if (goal.type === "time") {
-        value = document.getElementById("progressTime").value;
-      } else {
-        value = +document.getElementById("progressAmount").value;
-      }
-
-      progress.push({ goal: goal.name, value, date, time: new Date().toLocaleTimeString() });
-      localStorage.setItem("progress", JSON.stringify(progress));
-      renderGoalsTable();
+        const goalId = parseInt(document.getElementById('goalSelect').value);
+        const date = document.getElementById('progressDate').value || new Date().toISOString().split('T')[0];
+        let value = document.getElementById('progressValue').value.trim().toLowerCase();
+        if (value === 'y') value = 'yes';
+        if (value === 'n') value = 'no';
+        progress.push({ goalId, date, value });
+        localStorage.setItem('progress', JSON.stringify(progress));
+        renderGoals();
     }
 
-    function renderGoalsTable() {
-      const tbody = document.querySelector("#goalsTable tbody");
-      tbody.innerHTML = "";
-      goals.forEach(goal => {
-        const rows = progress.filter(p => p.goal === goal.name);
-        let done = 0;
-        if (goal.type === "yesno") {
-          done = rows.filter(r => r.value.toLowerCase() === goal.expected.toLowerCase()).length;
-        } else if (goal.type === "number") {
-          done = rows.reduce((acc, r) => acc + (+r.value || 0), 0);
-        } else {
-          done = rows.length;
-        }
-        const percent = goal.target ? Math.round((done / goal.target) * 100) : "-";
-        let status = "status-red";
-        if (percent >= 80) status = "status-green";
-        else if (percent >= 50) status = "status-yellow";
+    function renderGoals() {
+        document.getElementById('goalSelect').innerHTML = goals.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+        const table = `<table><tr><th>Name</th><th>Type</th><th>Progress</th><th>Status</th></tr>` +
+            goals.map(goal => {
+                const logs = progress.filter(p => p.goalId === goal.id);
+                let progressValue = 0;
+                if (goal.type === 'amount') {
+                    progressValue = logs.reduce((sum, l) => sum + parseFloat(l.value || 0), 0);
+                } else if (goal.type === 'yesno') {
+                    progressValue = logs.filter(l => l.value === 'yes').length;
+                } else if (goal.type === 'time') {
+                    progressValue = logs.length; // just count entries
+                }
+                const percentage = goal.targetAmount ? (progressValue / goal.targetAmount) * 100 : 0;
+                let statusClass = 'status-green';
+                if (percentage < 33) statusClass = 'status-red';
+                else if (percentage < 66) statusClass = 'status-orange';
 
-        tbody.innerHTML += `
-          <tr class="${status}">
-            <td>${goal.name}</td>
-            <td>${goal.type}</td>
-            <td>${goal.target || goal.expected || "-"} ${goal.unit || ""}</td>
-            <td>${goal.start}</td>
-            <td>${goal.end}</td>
-            <td>${done}</td>
-            <td>${percent === '-' ? '-' : percent + '%'}</td>
-            <td>${percent >= 100 ? '✅ Done' : percent >= 80 ? '⚠️ Almost' : '⏳ Ongoing'}</td>
-            <td><button onclick="deleteGoal('${goal.name}')">Delete</button></td>
-          </tr>
-        `;
-      });
+                return `<tr class="${statusClass}"><td>${goal.name}</td><td>${goal.type}</td><td>${progressValue} ${goal.unit || ''}</td><td>${percentage.toFixed(1)}%</td></tr>`;
+            }).join('') + '</table>';
+        document.getElementById('goalsTableContainer').innerHTML = table;
+        updateChart();
     }
 
-    function deleteGoal(name) {
-      const idx = goals.findIndex(g => g.name === name);
-      if (idx >= 0) {
-        goals.splice(idx, 1);
-        localStorage.setItem("goals", JSON.stringify(goals));
-        populateGoals();
-      }
+    function updateChart() {
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        const chartData = goals.map(g => {
+            const logs = progress.filter(p => p.goalId === g.id);
+            if (g.type === 'amount') return logs.reduce((sum, l) => sum + parseFloat(l.value || 0), 0);
+            if (g.type === 'yesno') return logs.filter(l => l.value === 'yes').length;
+            return logs.length;
+        });
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: goals.map(g => g.name),
+                datasets: [{
+                    label: 'Progress',
+                    data: chartData,
+                    backgroundColor: '#0077cc'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
     }
 
-    document.getElementById("goalSelect").addEventListener("change", function() {
-      const goal = goals[this.value];
-      document.getElementById("progressAmountDiv").style.display = goal.type === "number" ? "block" : "none";
-      document.getElementById("progressYesNoDiv").style.display = goal.type === "yesno" ? "block" : "none";
-      document.getElementById("progressTimeDiv").style.display = goal.type === "time" ? "block" : "none";
-    });
+    renderGoals();
+</script>
 
-    populateGoals();
-  </script></body>
-</html>
+</body></html>
