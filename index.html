@@ -6,201 +6,182 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
-      background-color: #f4f6f8;
-      color: #333;
+      margin: 0;
+      padding: 1rem;
+      background-color: #f4f4f4;
     }
-    h1, h2 {
+    h2 {
+      background: #333;
+      color: #fff;
+      padding: 0.5rem;
       text-align: center;
     }
-    .section {
-      background-color: #fff;
-      padding: 20px;
-      margin-bottom: 30px;
+    section {
+      margin-bottom: 2rem;
       border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 1rem;
     }
-    .section-goal {
-      border-left: 5px solid #00aaff;
+    #goalForm {
+      background: #e6f0ff;
     }
-    .section-progress {
-      border-left: 5px solid #ffa500;
+    #progressForm {
+      background: #fff3e6;
     }
-    .section-logs {
-      border-left: 5px solid #28a745;
+    #goalTableSection {
+      background: #e6ffe6;
     }
     label {
-      display: block;
-      margin: 8px 0 5px;
+      display: inline-block;
+      width: 150px;
+      margin-bottom: 0.5rem;
     }
-    input, select {
-      padding: 5px;
-      margin-bottom: 10px;
-      width: 100%;
-      max-width: 400px;
+    input, select, button {
+      padding: 0.5rem;
+      margin: 0.3rem 0;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
-    }
-    table, th, td {
-      border: 1px solid #ccc;
+      background: #fff;
     }
     th, td {
-      padding: 8px;
+      border: 1px solid #ccc;
+      padding: 0.5rem;
       text-align: center;
     }
-    .btn {
-      padding: 10px 20px;
-      margin-top: 10px;
-      font-weight: bold;
-      cursor: pointer;
+    .low-progress {
+      background-color: #ffcccc;
     }
-    .btn-save {
-      background-color: #007bff;
-      color: white;
-      border: none;
+    .medium-progress {
+      background-color: #fff3cd;
     }
-    .btn-progress {
-      background-color: #28a745;
-      color: white;
-      border: none;
-    }
-    .status-red {
-      background-color: #ff4d4d;
-      color: white;
-    }
-    .status-yellow {
-      background-color: #ffc107;
-    }
-    .status-green {
-      background-color: #28a745;
-      color: white;
+    .high-progress {
+      background-color: #d4edda;
     }
   </style>
 </head>
-<body>
-  <h1>📊 Goal & Habit Tracker</h1>  <div class="section section-goal">
-    <h2>🎯 Add New Goal or Habit</h2>
-    <label for="goal">Goal/Habit Name:</label>
-    <input type="text" id="goal" /><label for="goalType">Type:</label>
-<select id="goalType">
-  <option value="numeric">Numeric (e.g., 100 hours)</option>
-  <option value="time">Time-Based (e.g., office arrival)</option>
-  <option value="yesno">Yes / No (e.g., Did you meditate?)</option>
-</select>
-
-<label for="target">Target Amount (if any):</label>
-<input type="number" id="target" />
-
-<label for="unit">Target Unit:</label>
-<input type="text" id="unit" placeholder="e.g. hrs, km, times" />
-
-<label for="start">Start Date:</label>
-<input type="date" id="start" />
-
-<label for="end">Target Completion Date:</label>
-<input type="date" id="end" />
-
-<button class="btn btn-save" onclick="saveGoal()">💾 Save Goal</button>
-
-  </div>  <div class="section section-progress">
-    <h2>📥 Add Daily Progress</h2>
-    <label for="goalSelect">Select Goal:</label>
-    <select id="goalSelect"></select><label for="entry">Enter Value / Time / Yes or No:</label>
-<input type="text" id="entry" />
-
-<label for="date">Date:</label>
-<input type="date" id="date" />
-
-<button class="btn btn-progress" onclick="addProgress()">✅ Add Progress</button>
-
-  </div>  <div class="section section-logs">
-    <h2>📋 All Entries</h2>
-    <table id="dataTable">
+<body>  <h2>🌟 Goal & Habit Tracker</h2>  <section id="progressForm">
+    <h3>📆 Daily Entry</h3>
+    <form id="entryForm">
+      <label for="entryGoal">Select Goal:</label>
+      <select id="entryGoal" required></select><br/>
+      <label for="entryValue">Progress:</label>
+      <input type="text" id="entryValue" required />
+      <button type="submit">➕ Add Progress</button>
+    </form>
+  </section>  <section id="goalForm">
+    <h3>🎯 Add New Goal / Habit</h3>
+    <form id="newGoalForm">
+      <label for="goalName">Goal Name:</label>
+      <input type="text" id="goalName" required /><br/>
+      <label for="targetAmount">Target Amount:</label>
+      <input type="number" id="targetAmount" /><br/>
+      <label for="unit">Unit (hrs, kg, yes/no):</label>
+      <input type="text" id="unit" /><br/>
+      <label for="startDate">Start Date:</label>
+      <input type="date" id="startDate" /><br/>
+      <label for="endDate">Target End Date:</label>
+      <input type="date" id="endDate" /><br/>
+      <button type="submit">💾 Save Goal</button>
+    </form>
+  </section>  <section id="goalTableSection">
+    <h3>📊 Overview & Progress</h3>
+    <table id="goalTable">
       <thead>
         <tr>
-          <th>Goal Name</th>
-          <th>Type</th>
-          <th>Value</th>
-          <th>Date</th>
-          <th>Time</th>
-          <th>% Completed</th>
+          <th>Goal</th>
+          <th>Unit</th>
+          <th>Target</th>
+          <th>Progress</th>
+          <th>% Complete</th>
+          <th>Days Remaining</th>
           <th>Status</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
-  </div>  <script>
-    let goals = JSON.parse(localStorage.getItem('goals') || '[]');
+  </section>  <script>
+    let goals = JSON.parse(localStorage.getItem('goals') || '{}');
     let progress = JSON.parse(localStorage.getItem('progress') || '[]');
 
-    function saveGoal() {
-      const goal = document.getElementById('goal').value;
-      const type = document.getElementById('goalType').value;
-      const target = document.getElementById('target').value;
-      const unit = document.getElementById('unit').value;
-      const start = document.getElementById('start').value;
-      const end = document.getElementById('end').value;
-      if (!goal) return alert('Please enter a goal');
-
-      goals.push({ goal, type, target, unit, start, end });
-      localStorage.setItem('goals', JSON.stringify(goals));
-      populateGoals();
+    function updateGoalDropdown() {
+      const dropdown = document.getElementById('entryGoal');
+      dropdown.innerHTML = '';
+      for (let key in goals) {
+        let option = document.createElement('option');
+        option.value = key;
+        option.textContent = key;
+        dropdown.appendChild(option);
+      }
     }
 
-    function populateGoals() {
-      const dropdown = document.getElementById('goalSelect');
-      dropdown.innerHTML = goals.map(
-        (g, i) => `<option value="${i}">${g.goal}</option>`
-      ).join('');
-    }
-
-    function addProgress() {
-      const goalIndex = document.getElementById('goalSelect').value;
-      const value = document.getElementById('entry').value;
-      const date = document.getElementById('date').value;
-      const time = new Date().toLocaleTimeString();
-      if (!value || !date) return alert('Please enter value and date');
-
-      progress.push({ goalIndex, value, date, time });
-      localStorage.setItem('progress', JSON.stringify(progress));
-      renderTable();
-    }
-
-    function renderTable() {
-      const tbody = document.querySelector('#dataTable tbody');
+    function updateTable() {
+      const tbody = document.querySelector('#goalTable tbody');
       tbody.innerHTML = '';
+      for (let name in goals) {
+        const total = progress
+          .filter(p => p.goal === name)
+          .reduce((acc, cur) => acc + parseFloat(cur.value), 0);
+        const goal = goals[name];
+        const percent = goal.targetAmount ? Math.min(100, ((total / goal.targetAmount) * 100).toFixed(1)) : 'NA';
+        const end = goal.endDate ? new Date(goal.endDate) : null;
+        const daysLeft = end ? Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24)) : 'NA';
 
-      progress.forEach(p => {
-        const g = goals[p.goalIndex];
-        let percent = 'N/A';
-        let statusClass = '';
+        const tr = document.createElement('tr');
+        tr.className = percent === 'NA' ? '' : percent < 50 ? 'low-progress' : percent < 80 ? 'medium-progress' : 'high-progress';
 
-        if (g.type === 'numeric' && g.target > 0) {
-          const total = progress.filter(x => x.goalIndex == p.goalIndex && !isNaN(x.value)).reduce((sum, x) => sum + parseFloat(x.value), 0);
-          percent = ((total / g.target) * 100).toFixed(1);
-          if (percent < 50) statusClass = 'status-red';
-          else if (percent < 80) statusClass = 'status-yellow';
-          else statusClass = 'status-green';
-        }
-
-        tbody.innerHTML += `
-          <tr>
-            <td>${g.goal}</td>
-            <td>${g.type}</td>
-            <td>${p.value}</td>
-            <td>${p.date}</td>
-            <td>${p.time}</td>
-            <td>${percent}%</td>
-            <td class="${statusClass}">${percent !== 'N/A' ? (percent < 50 ? '🔴' : percent < 80 ? '🟡' : '🟢') : '–'}</td>
-          </tr>`;
-      });
+        tr.innerHTML = `
+          <td>${name}</td>
+          <td>${goal.unit}</td>
+          <td>${goal.targetAmount || '-'}</td>
+          <td>${total}</td>
+          <td>${percent}%</td>
+          <td>${daysLeft}</td>
+          <td>${percent === 'NA' ? '-' : percent < 50 ? '🔴' : percent < 80 ? '🟡' : '🟢'}</td>
+        `;
+        tbody.appendChild(tr);
+      }
     }
 
-    // Init
-    populateGoals();
-    renderTable();
+    document.getElementById('newGoalForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('goalName').value;
+      const target = document.getElementById('targetAmount').value;
+      const unit = document.getElementById('unit').value;
+      const start = document.getElementById('startDate').value;
+      const end = document.getElementById('endDate').value;
+
+      goals[name] = { targetAmount: parseFloat(target), unit, startDate: start, endDate: end };
+      localStorage.setItem('goals', JSON.stringify(goals));
+      updateGoalDropdown();
+      updateTable();
+      e.target.reset();
+    });
+
+    document.getElementById('entryForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const goal = document.getElementById('entryGoal').value;
+      const value = document.getElementById('entryValue').value;
+      const time = new Date().toLocaleString();
+
+      progress.push({ goal, value, time });
+      localStorage.setItem('progress', JSON.stringify(progress));
+      updateTable();
+      e.target.reset();
+    });
+
+    updateGoalDropdown();
+    updateTable();
   </script></body>
 </html>
