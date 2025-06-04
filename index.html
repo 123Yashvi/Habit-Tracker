@@ -2,206 +2,218 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#317EFB" />
-  <link rel="manifest" href="manifest.json" />
-  <title>Smart Goal & Habit Tracker</title>
+  <title>Smart Goal Tracker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f0f4f8;
-      padding: 20px;
-      color: #333;
-    }
-    h1, h2 {
-      color: #004080;
-    }
-    .container {
-      max-width: 900px;
-      margin: auto;
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-    }
-    input, select {
-      padding: 6px;
-      width: 100%;
-      margin-top: 4px;
-    }
-    button {
-      padding: 10px 15px;
-      background: #004080;
-      color: white;
-      border: none;
-      margin-top: 15px;
-      cursor: pointer;
-      border-radius: 6px;
-    }
-    button:hover {
-      background: #0055aa;
-    }
-    .entry-section {
-      background: #fff;
-      padding: 20px;
-      margin-top: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    .goal-table {
-      width: 100%;
-      margin-top: 20px;
-      border-collapse: collapse;
-    }
-    .goal-table th, .goal-table td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-    }
-    .goal-table th {
-      background: #e0eaff;
-    }
-    .yesno {
-      color: green;
-      font-weight: bold;
-    }
-    .status-pending { color: orange; font-weight: bold; }
-    .status-complete { color: green; font-weight: bold; }
-    .status-lagging { color: red; font-weight: bold; }
-    canvas { max-width: 100%; margin-top: 40px; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f4f9; }
+    h1 { color: #333; }
+    .section { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, select { padding: 8px; margin-top: 5px; width: 100%; border-radius: 5px; border: 1px solid #ccc; }
+    button { padding: 10px 20px; border: none; border-radius: 5px; margin-top: 10px; font-weight: bold; cursor: pointer; }
+    #saveGoalBtn { background-color: #007BFF; color: white; }
+    #addProgressBtn { background-color: #28A745; color: white; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
+    th { background-color: #007BFF; color: white; }
+    .status-green { background-color: #d4edda; }
+    .status-yellow { background-color: #fff3cd; }
+    .status-red { background-color: #f8d7da; }
+    .goal-yesno select, .goal-time input[type='time'] { display: none; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📊 Smart Goal & Habit Tracker</h1>
-    <div class="entry-section">
-      <h2>Add New Goal or Habit</h2>
-      <label>Goal Name:<input id="goalName" /></label>
-      <label>Goal Type:
-        <select id="goalType">
-          <option value="number">Number</option>
-          <option value="yesno">Yes / No</option>
-          <option value="time">Time (HH:MM)</option>
-          <option value="note">Note / Just Track</option>
-        </select>
-      </label>
-      <label>Target Amount (if applicable):<input id="goalTarget" type="number" /></label>
-      <label>Unit (eg. kg, times, mins):<input id="goalUnit" /></label>
-      <label>Start Date:<input id="goalStart" type="date" /></label>
-      <label>End Date:<input id="goalEnd" type="date" /></label>
-      <button onclick="saveGoal()">💾 Save Goal</button>
-    </div><div class="entry-section">
-  <h2>📅 Enter Daily Progress</h2>
-  <label>Choose Goal:
-    <select id="goalSelect"></select>
-  </label>
-  <label>Entry Date:<input id="entryDate" type="date" /></label>
-  <label>Entry Time:<input id="entryTime" type="time" /></label>
-  <label>Value:<input id="entryValue" /></label>
-  <button onclick="addProgress()">📌 Add Progress</button>
+  <h1>🎯 Smart Goal Tracker</h1>  <div class="section">
+    <h2>Add New Goal</h2>
+    <label>Goal Name</label>
+    <input type="text" id="goalName" /><label>Goal Type</label>
+<select id="goalType" onchange="adjustGoalInputs()">
+  <option value="number">Count/Amount</option>
+  <option value="yesno">Yes / No</option>
+  <option value="time">Time</option>
+  <option value="info">Just Info</option>
+</select>
+
+<div id="goalAmountDiv">
+  <label>Target Amount</label>
+  <input type="number" id="targetAmount" />
+
+  <label>Target Unit</label>
+  <input type="text" id="targetUnit" />
 </div>
 
-<div class="entry-section">
-  <h2>🧾 All Goals Overview</h2>
-  <table class="goal-table" id="goalTable">
-    <thead>
-      <tr><th>Goal</th><th>Target</th><th>Progress</th><th>%</th><th>Status</th><th>Start</th><th>End</th><th>Actions</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<div id="goalYesNoDiv" style="display:none">
+  <label>Expected Answer</label>
+  <select id="yesNoExpected">
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+  </select>
 </div>
 
-<canvas id="chart"></canvas>
+<label>Start Date</label>
+<input type="date" id="startDate" />
 
+<label>Target End Date</label>
+<input type="date" id="targetDate" />
+
+<button id="saveGoalBtn" onclick="saveGoal()">Save Goal</button>
+
+  </div>  <div class="section">
+    <h2>📅 Daily Progress Entry</h2>
+    <label>Select Goal</label>
+    <select id="goalSelect"></select><div id="progressYesNoDiv" style="display:none">
+  <label>Your Answer</label>
+  <select id="progressYesNo">
+    <option value="Yes">Yes</option>
+    <option value="No">No</option>
+  </select>
+</div>
+
+<div id="progressAmountDiv">
+  <label>Enter Progress</label>
+  <input type="number" id="progressAmount" />
+</div>
+
+<div id="progressTimeDiv" style="display:none">
+  <label>Enter Time</label>
+  <input type="time" id="progressTime" />
+</div>
+
+<label>Date</label>
+<input type="date" id="progressDate" />
+
+<button id="addProgressBtn" onclick="addProgress()">Add Progress</button>
+
+  </div>  <div class="section">
+    <h2>📊 Your Goals</h2>
+    <table id="goalsTable">
+      <thead>
+        <tr>
+          <th>Goal</th>
+          <th>Type</th>
+          <th>Target</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Progress</th>
+          <th>% Done</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>  <script>
-    const goals = JSON.parse(localStorage.getItem('goals') || '[]');
-    const progress = JSON.parse(localStorage.getItem('progress') || '[]');
+    const goals = JSON.parse(localStorage.getItem("goals") || "[]");
+    const progress = JSON.parse(localStorage.getItem("progress") || "[]");
 
-    function saveGoal() {
-      const goal = {
-        name: goalName.value.trim(),
-        type: goalType.value,
-        target: parseFloat(goalTarget.value) || null,
-        unit: goalUnit.value.trim(),
-        start: goalStart.value,
-        end: goalEnd.value,
-        id: Date.now()
-      };
-      goals.push(goal);
-      localStorage.setItem('goals', JSON.stringify(goals));
-      updateGoalSelect();
-      renderGoals();
+    function adjustGoalInputs() {
+      const type = document.getElementById("goalType").value;
+      document.getElementById("goalAmountDiv").style.display = type === "number" ? "block" : "none";
+      document.getElementById("goalYesNoDiv").style.display = type === "yesno" ? "block" : "none";
     }
 
-    function updateGoalSelect() {
-      goalSelect.innerHTML = goals.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+    function saveGoal() {
+      const name = document.getElementById("goalName").value;
+      const type = document.getElementById("goalType").value;
+      const start = document.getElementById("startDate").value;
+      const end = document.getElementById("targetDate").value;
+      let target = "";
+      let unit = "";
+      let expected = "";
+
+      if (type === "number") {
+        target = +document.getElementById("targetAmount").value;
+        unit = document.getElementById("targetUnit").value;
+      } else if (type === "yesno") {
+        expected = document.getElementById("yesNoExpected").value;
+      }
+
+      goals.push({ name, type, target, unit, expected, start, end });
+      localStorage.setItem("goals", JSON.stringify(goals));
+      populateGoals();
+    }
+
+    function populateGoals() {
+      const goalSelect = document.getElementById("goalSelect");
+      goalSelect.innerHTML = "";
+      goals.forEach((g, i) => {
+        const option = document.createElement("option");
+        option.value = i;
+        option.text = g.name;
+        goalSelect.add(option);
+      });
+      renderGoalsTable();
     }
 
     function addProgress() {
-      const val = entryValue.value.trim().toLowerCase();
-      const type = goals.find(g => g.id == goalSelect.value)?.type;
-      let finalValue;
-      if (type === 'yesno') finalValue = val === 'yes' || val === 'y' ? 1 : 0;
-      else if (type === 'time') finalValue = entryTime.value;
-      else finalValue = parseFloat(val) || val;
+      const goalIdx = document.getElementById("goalSelect").value;
+      const goal = goals[goalIdx];
+      const date = document.getElementById("progressDate").value || new Date().toISOString().slice(0,10);
+      let value = "";
 
-      progress.push({
-        goalId: parseInt(goalSelect.value),
-        date: entryDate.value,
-        time: entryTime.value,
-        value: finalValue
-      });
-      localStorage.setItem('progress', JSON.stringify(progress));
-      renderGoals();
+      if (goal.type === "yesno") {
+        value = document.getElementById("progressYesNo").value;
+      } else if (goal.type === "time") {
+        value = document.getElementById("progressTime").value;
+      } else {
+        value = +document.getElementById("progressAmount").value;
+      }
+
+      progress.push({ goal: goal.name, value, date, time: new Date().toLocaleTimeString() });
+      localStorage.setItem("progress", JSON.stringify(progress));
+      renderGoalsTable();
     }
 
-    function renderGoals() {
-      const tbody = document.querySelector('#goalTable tbody');
-      tbody.innerHTML = '';
-      goals.forEach(g => {
-        const entries = progress.filter(p => p.goalId === g.id);
-        let prog = 0;
-        if (g.type === 'yesno') prog = entries.reduce((acc, e) => acc + (e.value ? 1 : 0), 0);
-        else if (g.type === 'number') prog = entries.reduce((acc, e) => acc + parseFloat(e.value || 0), 0);
-        const percent = g.target ? Math.round((prog / g.target) * 100) : 'N/A';
-        let status = 'Pending';
-        if (percent === 'N/A') status = 'Tracking';
-        else if (percent >= 100) status = 'Complete';
-        else if (percent < 50) status = 'Lagging';
+    function renderGoalsTable() {
+      const tbody = document.querySelector("#goalsTable tbody");
+      tbody.innerHTML = "";
+      goals.forEach(goal => {
+        const rows = progress.filter(p => p.goal === goal.name);
+        let done = 0;
+        if (goal.type === "yesno") {
+          done = rows.filter(r => r.value.toLowerCase() === goal.expected.toLowerCase()).length;
+        } else if (goal.type === "number") {
+          done = rows.reduce((acc, r) => acc + (+r.value || 0), 0);
+        } else {
+          done = rows.length;
+        }
+        const percent = goal.target ? Math.round((done / goal.target) * 100) : "-";
+        let status = "status-red";
+        if (percent >= 80) status = "status-green";
+        else if (percent >= 50) status = "status-yellow";
 
         tbody.innerHTML += `
-          <tr>
-            <td>${g.name}</td>
-            <td>${g.target || '-'} ${g.unit || ''}</td>
-            <td>${prog}</td>
-            <td>${percent}%</td>
-            <td class="status-${status.toLowerCase()}">${status}</td>
-            <td>${g.start}</td>
-            <td>${g.end}</td>
-            <td><button onclick="editGoal(${g.id})">✏️</button> <button onclick="deleteGoal(${g.id})">🗑️</button></td>
-          </tr>`;
+          <tr class="${status}">
+            <td>${goal.name}</td>
+            <td>${goal.type}</td>
+            <td>${goal.target || goal.expected || "-"} ${goal.unit || ""}</td>
+            <td>${goal.start}</td>
+            <td>${goal.end}</td>
+            <td>${done}</td>
+            <td>${percent === '-' ? '-' : percent + '%'}</td>
+            <td>${percent >= 100 ? '✅ Done' : percent >= 80 ? '⚠️ Almost' : '⏳ Ongoing'}</td>
+            <td><button onclick="deleteGoal('${goal.name}')">Delete</button></td>
+          </tr>
+        `;
       });
     }
 
-    function editGoal(id) {
-      const g = goals.find(x => x.id === id);
-      goalName.value = g.name;
-      goalType.value = g.type;
-      goalTarget.value = g.target;
-      goalUnit.value = g.unit;
-      goalStart.value = g.start;
-      goalEnd.value = g.end;
-      deleteGoal(id);
+    function deleteGoal(name) {
+      const idx = goals.findIndex(g => g.name === name);
+      if (idx >= 0) {
+        goals.splice(idx, 1);
+        localStorage.setItem("goals", JSON.stringify(goals));
+        populateGoals();
+      }
     }
 
-    function deleteGoal(id) {
-      const index = goals.findIndex(x => x.id === id);
-      goals.splice(index, 1);
-      localStorage.setItem('goals', JSON.stringify(goals));
-      renderGoals();
-      updateGoalSelect();
-    }
+    document.getElementById("goalSelect").addEventListener("change", function() {
+      const goal = goals[this.value];
+      document.getElementById("progressAmountDiv").style.display = goal.type === "number" ? "block" : "none";
+      document.getElementById("progressYesNoDiv").style.display = goal.type === "yesno" ? "block" : "none";
+      document.getElementById("progressTimeDiv").style.display = goal.type === "time" ? "block" : "none";
+    });
 
-    updateGoalSelect();
-    renderGoals();
+    populateGoals();
   </script></body>
 </html>
