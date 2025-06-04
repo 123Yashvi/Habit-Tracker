@@ -1,0 +1,142 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Habit Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 1rem; background: #f5f5f5; }
+    h1, h2 { color: #333; }
+    input, select, button { margin: 0.5rem 0; padding: 0.4rem; width: 100%; max-width: 400px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; background: white; }
+    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+    .goal-form, .progress-form, .export-import { background: white; padding: 1rem; margin-top: 1rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+    .container { max-width: 800px; margin: auto; }
+    .edit-btn { color: blue; cursor: pointer; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>📊 Habit & Goal Tracker</h1>
+
+  <div class="goal-form">
+    <h2>Add/Edit Goal</h2>
+    <input type="text" id="goalName" placeholder="Goal/Habit Name" />
+    <input type="number" id="targetAmount" placeholder="Target Amount" />
+    <input type="text" id="targetUnit" placeholder="Target Unit (e.g., pages, km)" />
+    <input type="date" id="startDate" />
+    <input type="date" id="endDate" />
+    <button onclick="addGoal()">➕ Add/Update Goal</button>
+  </div>
+
+  <div class="progress-form">
+    <h2>Enter Daily Progress</h2>
+    <select id="goalSelect"></select>
+    <input type="date" id="progressDate" />
+    <input type="number" id="progressAmount" placeholder="Progress Amount" />
+    <button onclick="addProgress()">✅ Save Progress</button>
+  </div>
+
+  <div class="export-import">
+    <h2>Backup & Restore</h2>
+    <button onclick="exportData()">📤 Export JSON</button>
+    <input type="file" id="importFile" />
+    <button onclick="importData()">📥 Import JSON</button>
+  </div>
+
+  <div id="tableContainer"></div>
+</div>
+
+<script>
+  let goals = JSON.parse(localStorage.getItem("goals") || "[]");
+  let progress = JSON.parse(localStorage.getItem("progress") || "[]");
+
+  function save() {
+    localStorage.setItem("goals", JSON.stringify(goals));
+    localStorage.setItem("progress", JSON.stringify(progress));
+    updateUI();
+  }
+
+  function addGoal() {
+    const name = document.getElementById("goalName").value.trim();
+    const target = +document.getElementById("targetAmount").value;
+    const unit = document.getElementById("targetUnit").value.trim();
+    const start = document.getElementById("startDate").value;
+    const end = document.getElementById("endDate").value;
+    const idx = goals.findIndex(g => g.name === name);
+    if (idx >= 0) goals[idx] = { name, target, unit, start, end };
+    else goals.push({ name, target, unit, start, end });
+    save();
+  }
+
+  function addProgress() {
+    const name = document.getElementById("goalSelect").value;
+    const date = document.getElementById("progressDate").value;
+    const amount = +document.getElementById("progressAmount").value;
+    const existing = progress.find(p => p.name === name && p.date === date);
+    if (existing) existing.amount += amount;
+    else progress.push({ name, date, amount });
+    save();
+  }
+
+  function exportData() {
+    const blob = new Blob([JSON.stringify({ goals, progress })], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "habit-tracker-data.json";
+    a.click();
+  }
+
+  function importData() {
+    const file = document.getElementById("importFile").files[0];
+    const reader = new FileReader();
+    reader.onload = e => {
+      const data = JSON.parse(e.target.result);
+      goals = data.goals || [];
+      progress = data.progress || [];
+      save();
+    };
+    reader.readAsText(file);
+  }
+
+  function updateUI() {
+    const goalSelect = document.getElementById("goalSelect");
+    goalSelect.innerHTML = goals.map(g => `<option value="${g.name}">${g.name}</option>`).join("");
+
+    const container = document.getElementById("tableContainer");
+    container.innerHTML = "";
+    goals.forEach(goal => {
+      const logs = progress.filter(p => p.name === goal.name);
+      const total = logs.reduce((sum, l) => sum + l.amount, 0);
+      const today = new Date();
+      const sDate = new Date(goal.start);
+      const eDate = new Date(goal.end);
+      const daysTotal = (eDate - sDate) / 86400000;
+      const daysPassed = (today - sDate) / 86400000;
+      const daysLeft = (eDate - today) / 86400000;
+      const currentSpeed = (total / daysPassed).toFixed(2);
+      const requiredSpeed = ((goal.target - total) / daysLeft).toFixed(2);
+
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead><tr><th colspan="2">${goal.name}</th></tr></thead>
+        <tbody>
+          <tr><td>Target</td><td>${goal.target} ${goal.unit}</td></tr>
+          <tr><td>Completed</td><td>${total}</td></tr>
+          <tr><td>Start - End</td><td>${goal.start} → ${goal.end}</td></tr>
+          <tr><td>Today's Date</td><td>${today.toISOString().split("T")[0]}</td></tr>
+          <tr><td>Days Passed / Left</td><td>${Math.floor(daysPassed)} / ${Math.ceil(daysLeft)}</td></tr>
+          <tr><td>Current Speed</td><td>${isNaN(currentSpeed) ? "-" : currentSpeed} ${goal.unit}/day</td></tr>
+          <tr><td>Required Speed</td><td>${isNaN(requiredSpeed) ? "-" : requiredSpeed} ${goal.unit}/day</td></tr>
+        </tbody>
+      `;
+      container.appendChild(table);
+    });
+  }
+
+  updateUI();
+</script>
+</body>
+</html>
