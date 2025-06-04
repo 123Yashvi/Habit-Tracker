@@ -2,186 +2,166 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Goal & Habit Tracker</title>
+  <title>Smart Goal & Habit Tracker</title>
   <style>
     body {
       font-family: Arial, sans-serif;
+      background-color: #f7f9fb;
+      color: #333;
       margin: 0;
-      padding: 1rem;
-      background-color: #f4f4f4;
+      padding: 20px;
     }
-    h2 {
-      background: #333;
-      color: #fff;
-      padding: 0.5rem;
-      text-align: center;
+    h1, h2 {
+      color: #2c3e50;
     }
-    section {
-      margin-bottom: 2rem;
-      border-radius: 10px;
-      padding: 1rem;
+    .section {
+      background-color: #ffffff;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-    #goalForm {
-      background: #e6f0ff;
-    }
-    #progressForm {
-      background: #fff3e6;
-    }
-    #goalTableSection {
-      background: #e6ffe6;
+    .section-heading {
+      margin-top: 0;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
     }
     label {
-      display: inline-block;
-      width: 150px;
-      margin-bottom: 0.5rem;
+      display: block;
+      margin-top: 10px;
     }
-    input, select, button {
-      padding: 0.5rem;
-      margin: 0.3rem 0;
-      border-radius: 5px;
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
     }
     button {
-      background-color: #007bff;
+      background-color: #2980b9;
       color: white;
       border: none;
-      font-weight: bold;
+      padding: 10px 20px;
+      margin-top: 10px;
       cursor: pointer;
+      border-radius: 4px;
     }
     button:hover {
-      background-color: #0056b3;
+      background-color: #3498db;
     }
-    table {
+    .goal-table, .entry-table {
       width: 100%;
       border-collapse: collapse;
-      background: #fff;
+      margin-top: 20px;
     }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.5rem;
-      text-align: center;
+    .goal-table th, .goal-table td, .entry-table th, .entry-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
     }
-    .low-progress {
-      background-color: #ffcccc;
+    .goal-table th, .entry-table th {
+      background-color: #f0f0f0;
     }
-    .medium-progress {
-      background-color: #fff3cd;
+    .progress-bar {
+      background-color: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
     }
-    .high-progress {
-      background-color: #d4edda;
+    .progress-bar-inner {
+      height: 10px;
+      background-color: #2ecc71;
+    }
+    .status-green { background-color: #d4edda; }
+    .status-yellow { background-color: #fff3cd; }
+    .status-red { background-color: #f8d7da; }
+    .delete-btn {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .edit-btn {
+      background-color: #f39c12;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .chart-container {
+      width: 100%;
+      height: 300px;
+      margin-top: 20px;
     }
   </style>
 </head>
-<body>  <h2>🌟 Goal & Habit Tracker</h2>  <section id="progressForm">
-    <h3>📆 Daily Entry</h3>
-    <form id="entryForm">
-      <label for="entryGoal">Select Goal:</label>
-      <select id="entryGoal" required></select><br/>
-      <label for="entryValue">Progress:</label>
-      <input type="text" id="entryValue" required />
-      <button type="submit">➕ Add Progress</button>
-    </form>
-  </section>  <section id="goalForm">
-    <h3>🎯 Add New Goal / Habit</h3>
-    <form id="newGoalForm">
-      <label for="goalName">Goal Name:</label>
-      <input type="text" id="goalName" required /><br/>
-      <label for="targetAmount">Target Amount:</label>
-      <input type="number" id="targetAmount" /><br/>
-      <label for="unit">Unit (hrs, kg, yes/no):</label>
-      <input type="text" id="unit" /><br/>
-      <label for="startDate">Start Date:</label>
-      <input type="date" id="startDate" /><br/>
-      <label for="endDate">Target End Date:</label>
-      <input type="date" id="endDate" /><br/>
-      <button type="submit">💾 Save Goal</button>
-    </form>
-  </section>  <section id="goalTableSection">
-    <h3>📊 Overview & Progress</h3>
-    <table id="goalTable">
+<body>
+  <div class="section">
+    <h1 class="section-heading">🎯 Set New Goal or Habit</h1>
+    <!-- Dynamic input type form (type, target, yes/no etc) -->
+    <form id="goalForm">
+      <label>Goal Name:</label>
+      <input type="text" id="goalName" required /><label>Goal Type:</label>
+  <select id="goalType">
+    <option value="numeric">Numeric (with unit)</option>
+    <option value="yesno">Yes/No</option>
+    <option value="time">Time-based</option>
+    <option value="note">Log-only (note)</option>
+  </select>
+
+  <label>Target Amount (if applicable):</label>
+  <input type="number" id="goalTarget" />
+
+  <label>Unit:</label>
+  <input type="text" id="goalUnit" placeholder="pages, km, hrs, etc." />
+
+  <label>Start Date:</label>
+  <input type="date" id="goalStart" />
+
+  <label>End Date:</label>
+  <input type="date" id="goalEnd" />
+
+  <button type="submit">💾 Save Goal</button>
+</form>
+
+  </div>  <div class="section">
+    <h2 class="section-heading">📌 Enter Daily Progress</h2>
+    <form id="progressForm">
+      <label>Select Goal:</label>
+      <select id="progressGoal"></select><label>Date:</label>
+  <input type="date" id="progressDate" />
+
+  <label>Progress:</label>
+  <input type="text" id="progressValue" />
+
+  <button type="submit">✅ Add Progress</button>
+</form>
+
+  </div>  <div class="section">
+    <h2 class="section-heading">📊 Goals Overview</h2>
+    <table class="goal-table" id="goalsTable">
       <thead>
         <tr>
-          <th>Goal</th>
-          <th>Unit</th>
+          <th>Name</th>
+          <th>Type</th>
           <th>Target</th>
           <th>Progress</th>
-          <th>% Complete</th>
-          <th>Days Remaining</th>
+          <th>Start</th>
+          <th>End</th>
           <th>Status</th>
+          <th>% Complete</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
-  </section>  <script>
-    let goals = JSON.parse(localStorage.getItem('goals') || '{}');
-    let progress = JSON.parse(localStorage.getItem('progress') || '[]');
-
-    function updateGoalDropdown() {
-      const dropdown = document.getElementById('entryGoal');
-      dropdown.innerHTML = '';
-      for (let key in goals) {
-        let option = document.createElement('option');
-        option.value = key;
-        option.textContent = key;
-        dropdown.appendChild(option);
-      }
-    }
-
-    function updateTable() {
-      const tbody = document.querySelector('#goalTable tbody');
-      tbody.innerHTML = '';
-      for (let name in goals) {
-        const total = progress
-          .filter(p => p.goal === name)
-          .reduce((acc, cur) => acc + parseFloat(cur.value), 0);
-        const goal = goals[name];
-        const percent = goal.targetAmount ? Math.min(100, ((total / goal.targetAmount) * 100).toFixed(1)) : 'NA';
-        const end = goal.endDate ? new Date(goal.endDate) : null;
-        const daysLeft = end ? Math.ceil((end - new Date()) / (1000 * 60 * 60 * 24)) : 'NA';
-
-        const tr = document.createElement('tr');
-        tr.className = percent === 'NA' ? '' : percent < 50 ? 'low-progress' : percent < 80 ? 'medium-progress' : 'high-progress';
-
-        tr.innerHTML = `
-          <td>${name}</td>
-          <td>${goal.unit}</td>
-          <td>${goal.targetAmount || '-'}</td>
-          <td>${total}</td>
-          <td>${percent}%</td>
-          <td>${daysLeft}</td>
-          <td>${percent === 'NA' ? '-' : percent < 50 ? '🔴' : percent < 80 ? '🟡' : '🟢'}</td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
-
-    document.getElementById('newGoalForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const name = document.getElementById('goalName').value;
-      const target = document.getElementById('targetAmount').value;
-      const unit = document.getElementById('unit').value;
-      const start = document.getElementById('startDate').value;
-      const end = document.getElementById('endDate').value;
-
-      goals[name] = { targetAmount: parseFloat(target), unit, startDate: start, endDate: end };
-      localStorage.setItem('goals', JSON.stringify(goals));
-      updateGoalDropdown();
-      updateTable();
-      e.target.reset();
-    });
-
-    document.getElementById('entryForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const goal = document.getElementById('entryGoal').value;
-      const value = document.getElementById('entryValue').value;
-      const time = new Date().toLocaleString();
-
-      progress.push({ goal, value, time });
-      localStorage.setItem('progress', JSON.stringify(progress));
-      updateTable();
-      e.target.reset();
-    });
-
-    updateGoalDropdown();
-    updateTable();
+  </div>  <div class="section chart-container">
+    <h2 class="section-heading">📈 Visual Dashboard</h2>
+    <!-- Placeholder for future pie/bar charts -->
+    <canvas id="progressChart"></canvas>
+  </div>  <script>
+    // Will include all JavaScript separately if you want in next step
   </script></body>
 </html>
