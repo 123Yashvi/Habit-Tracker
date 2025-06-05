@@ -63,31 +63,39 @@
 <body>
   <h2>Smart Goal Tracker</h2>  <!-- Placeholder for goal input form -->  <form id="goalForm">
     <label>Goal Name:</label>
-    <input type="text" id="goalName" required>
-    <label>Goal Type:</label>
-    <select id="goalType">
-      <option value="normal">Normal</option>
-      <option value="time">Time-Based</option>
-      <option value="yesno">Yes/No</option>
-    </select>
-    <label>Target Amount:</label>
-    <input type="text" id="targetAmount">
-    <label>Target Unit:</label>
-    <select id="unit">
-      <option value="hr:min">Hr:Min</option>
-      <option value="steps">Steps</option>
-      <option value="nos">Nos</option>
-    </select>
-    <label>Start Date:</label>
-    <input type="date" id="startDate">
-    <label>End Date:</label>
-    <input type="date" id="endDate">
-    <label>Minimum or Maximum Target:</label>
-    <select id="targetNature">
-      <option value="atleast">At Least</option>
-      <option value="atmost">At Most</option>
-    </select>
-    <button type="submit">Add Goal</button>
+    <input type="text" id="goalName" required><label>Goal Type:</label>
+<select id="goalType" onchange="toggleFields()">
+  <option value="normal">Normal</option>
+  <option value="time">Time-Based</option>
+  <option value="yesno">Yes/No</option>
+</select>
+
+<div id="amountSection">
+  <label>Target Amount:</label>
+  <input type="text" id="targetAmount">
+</div>
+
+<label>Target Unit:</label>
+<select id="unit">
+  <option value="hr:min">Hr:Min</option>
+  <option value="steps">Steps</option>
+  <option value="nos">Nos</option>
+</select>
+
+<label>Start Date:</label>
+<input type="date" id="startDate">
+
+<label>End Date:</label>
+<input type="date" id="endDate">
+
+<label>Minimum or Maximum Target:</label>
+<select id="targetNature">
+  <option value="atleast">At Least</option>
+  <option value="atmost">At Most</option>
+</select>
+
+<button type="submit">Add Goal</button>
+
   </form>  <!-- Placeholder for table summary -->  <table id="goalSummary">
     <thead>
       <tr>
@@ -100,28 +108,47 @@
         <th>Speed Now</th>
         <th>Speed Required</th>
         <th>Status</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
       <!-- Rows will be added dynamically -->
     </tbody>
   </table>  <!-- Placeholder for import/export and dummy data -->  <div id="importExportButtons">
-    <button onclick="exportData()">📤 Export Data</button>
-    <button onclick="importData()">📥 Import Data</button>
+    <button onclick="exportData()">📤 Export JSON</button>
+    <button onclick="importData()">📥 Import JSON</button>
     <button onclick="addDummyData()">➕ Add Dummy Data</button>
     <button onclick="clearDummyData()">❌ Clear Dummy Data</button>
   </div>  <!-- Placeholder for chart -->  <div id="chartContainer">
     <canvas id="progressChart" width="400" height="200"></canvas>
   </div>  <script>
+    function toggleFields() {
+      const goalType = document.getElementById('goalType').value;
+      const amountSection = document.getElementById('amountSection');
+
+      if (goalType === 'yesno') {
+        amountSection.style.display = 'none';
+      } else if (goalType === 'time') {
+        amountSection.style.display = 'block';
+        document.getElementById('targetAmount').type = 'time';
+      } else {
+        amountSection.style.display = 'block';
+        document.getElementById('targetAmount').type = 'text';
+      }
+    }
+
     function exportData() {
       alert("Exporting data to JSON coming soon.");
     }
+
     function importData() {
       alert("Import data feature via JSON file coming soon.");
     }
+
     function addDummyData() {
       alert("Dummy data added. Charts and table updated.");
     }
+
     function clearDummyData() {
       alert("Dummy data cleared.");
     }
