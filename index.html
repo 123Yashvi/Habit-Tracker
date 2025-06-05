@@ -1,156 +1,377 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Goal Tracker</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background-color: #f4f4f4;
-    }
-    h2 {
-      color: #333;
-    }
-    form, table {
-      margin-bottom: 20px;
-      background-color: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input, select, button {
-      margin: 5px 0;
-      padding: 10px;
-      font-size: 14px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      width: 100%;
-    }
-    button {
-      background-color: #28a745;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #218838;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ccc;
-      text-align: left;
-    }
-    .status-good { background-color: #d4edda; }
-    .status-warning { background-color: #fff3cd; }
-    .status-danger { background-color: #f8d7da; }
-    #importExportButtons {
-      text-align: center;
-      margin-top: 40px;
-    }
-    #importExportButtons button {
-      margin: 10px;
-      width: auto;
-    }
-    #chartContainer {
-      margin-top: 40px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Goal Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .form-container, .table-container, .chart-container { margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .good { background-color: #d4edda; }
+        .warning { background-color: #fff3cd; }
+        .bad { background-color: #f8d7da; }
+        button { padding: 8px 16px; margin: 5px; }
+        input, select { padding: 5px; margin: 5px; }
+        .hidden { display: none; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h2>Smart Goal Tracker</h2>  <!-- Placeholder for goal input form -->  <form id="goalForm">
-    <label>Goal Name:</label>
-    <input type="text" id="goalName" required><label>Goal Type:</label>
-<select id="goalType" onchange="toggleFields()">
-  <option value="normal">Normal</option>
-  <option value="time">Time-Based</option>
-  <option value="yesno">Yes/No</option>
-</select>
+    <!-- Goal Input Form -->
+    <div class="form-container">
+        <h2>Add Goal</h2>
+        <form id="goalForm">
+            <input type="text" id="goalName" placeholder="Goal Name" required>
+            <select id="goalType" onchange="toggleGoalFields()">
+                <option value="normal">Normal (Amount-based)</option>
+                <option value="time">Time-based</option>
+                <option value="yesno">Yes/No</option>
+            </select>
+            <div id="normalFields">
+                <input type="number" id="targetAmount" placeholder="Target Amount">
+                <select id="unit">
+                    <option value="steps">Steps</option>
+                    <option value="km">Kilometers</option>
+                    <option value="nos">Nos</option>
+                </select>
+            </div>
+            <div id="timeFields" class="hidden">
+                <input type="text" id="targetTime" placeholder="HH:MM">
+            </div>
+            <select id="targetDirection">
+                <option value="atLeast">At Least</option>
+                <option value="atMost">At Most</option>
+            </select>
+            <input type="date" id="startDate" required>
+            <input type="date" id="endDate" required>
+            <button type="submit">Add Goal</button>
+        </form>
+    </div>
 
-<div id="amountSection">
-  <label>Target Amount:</label>
-  <input type="text" id="targetAmount">
-</div>
+    <!-- Progress Entry Form -->
+    <div class="form-container">
+        <h2>Log Progress</h2>
+        <form id="progressForm">
+            <select id="progressGoal" required></select>
+            <div id="progressValueContainer">
+                <input type="number" id="progressValue" placeholder="Progress Value" class="hidden">
+                <input type="text" id="progressTime" placeholder="HH:MM" class="hidden">
+                <select id="progressYesNo" class="hidden">
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                </select>
+            </div>
+            <input type="date" id="progressDate" required>
+            <button type="submit">Log Progress</button>
+        </form>
+    </div>
 
-<label>Target Unit:</label>
-<select id="unit">
-  <option value="hr:min">Hr:Min</option>
-  <option value="steps">Steps</option>
-  <option value="nos">Nos</option>
-</select>
+    <!-- Summary Table -->
+    <div class="table-container">
+        <h2>Goal Summary</h2>
+        <table id="goalTable">
+            <thead>
+                <tr>
+                    <th>Goal</th>
+                    <th>Type</th>
+                    <th>Target</th>
+                    <th>Progress</th>
+                    <th>Days Left</th>
+                    <th>% Achieved</th>
+                    <th>Speed Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="goalTableBody"></tbody>
+        </table>
+    </div>
 
-<label>Start Date:</label>
-<input type="date" id="startDate">
+    <!-- Chart -->
+    <div class="chart-container">
+        <h2>Progress Chart</h2>
+        <canvas id="progressChart"></canvas>
+    </div>
 
-<label>End Date:</label>
-<input type="date" id="endDate">
+    <!-- Action Buttons -->
+    <div>
+        <button onclick="generateDummyData()">Add Dummy Data</button>
+        <button onclick="clearDummyData()">Clear Dummy Data</button>
+        <button onclick="exportToJSON()">Export to JSON</button>
+        <button onclick="document.getElementById('importFile').click()">Import JSON</button>
+        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importFromJSON(event)">
+    </div>
 
-<label>Minimum or Maximum Target:</label>
-<select id="targetNature">
-  <option value="atleast">At Least</option>
-  <option value="atmost">At Most</option>
-</select>
+    <script>
+        let goals = [];
+        let chart = null;
 
-<button type="submit">Add Goal</button>
+        // Toggle goal input fields based on type
+        function toggleGoalFields() {
+            const goalType = document.getElementById('goalType').value;
+            document.getElementById('normalFields').classList.toggle('hidden', goalType !== 'normal');
+            document.getElementById('timeFields').classList.toggle('hidden', goalType !== 'time');
+        }
 
-  </form>  <!-- Placeholder for table summary -->  <table id="goalSummary">
-    <thead>
-      <tr>
-        <th>Goal</th>
-        <th>Type</th>
-        <th>Target</th>
-        <th>Achieved</th>
-        <th>Days Done</th>
-        <th>Days Left</th>
-        <th>Speed Now</th>
-        <th>Speed Required</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Rows will be added dynamically -->
-    </tbody>
-  </table>  <!-- Placeholder for import/export and dummy data -->  <div id="importExportButtons">
-    <button onclick="exportData()">📤 Export JSON</button>
-    <button onclick="importData()">📥 Import JSON</button>
-    <button onclick="addDummyData()">➕ Add Dummy Data</button>
-    <button onclick="clearDummyData()">❌ Clear Dummy Data</button>
-  </div>  <!-- Placeholder for chart -->  <div id="chartContainer">
-    <canvas id="progressChart" width="400" height="200"></canvas>
-  </div>  <script>
-    function toggleFields() {
-      const goalType = document.getElementById('goalType').value;
-      const amountSection = document.getElementById('amountSection');
+        // Toggle progress input fields based on selected goal
+        function toggleProgressFields() {
+            const goalId = document.getElementById('progressGoal').value;
+            const goal = goals.find(g => g.id === goalId);
+            const valueInput = document.getElementById('progressValue');
+            const timeInput = document.getElementById('progressTime');
+            const yesNoInput = document.getElementById('progressYesNo');
 
-      if (goalType === 'yesno') {
-        amountSection.style.display = 'none';
-      } else if (goalType === 'time') {
-        amountSection.style.display = 'block';
-        document.getElementById('targetAmount').type = 'time';
-      } else {
-        amountSection.style.display = 'block';
-        document.getElementById('targetAmount').type = 'text';
-      }
-    }
+            valueInput.classList.toggle('hidden', goal.type !== 'normal');
+            timeInput.classList.toggle('hidden', goal.type !== 'time');
+            yesNoInput.classList.toggle('hidden', goal.type !== 'yesno');
 
-    function exportData() {
-      alert("Exporting data to JSON coming soon.");
-    }
+            // Auto-fill current date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('progressDate').value = today;
+        }
 
-    function importData() {
-      alert("Import data feature via JSON file coming soon.");
-    }
+        // Add goal
+        document.getElementById('goalForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const goal = {
+                id: Date.now().toString(),
+                name: document.getElementById('goalName').value,
+                type: document.getElementById('goalType').value,
+                target: document.getElementById('goalType').value === 'normal' 
+                    ? Number(document.getElementById('targetAmount').value) 
+                    : document.getElementById('targetTime').value || 'yes',
+                unit: document.getElementById('unit')?.value || '',
+                direction: document.getElementById('targetDirection').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                progress: []
+            };
+            goals.push(goal);
+            updateGoalTable();
+            updateProgressGoalDropdown();
+            updateChart();
+            this.reset();
+        });
 
-    function addDummyData() {
-      alert("Dummy data added. Charts and table updated.");
-    }
+        // Log progress
+        document.getElementById('progressForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const goalId = document.getElementById('progressGoal').value;
+            const goal = goals.find(g => g.id === goalId);
+            const progress = {
+                date: document.getElementById('progressDate').value,
+                value: goal.type === 'normal' ? Number(document.getElementById('progressValue').value) :
+                       goal.type === 'time' ? document.getElementById('progressTime').value :
+                       document.getElementById('progressYesNo').value
+            };
+            goal.progress.push(progress);
+            updateGoalTable();
+            updateChart();
+            this.reset();
+            toggleProgressFields();
+        });
 
-    function clearDummyData() {
-      alert("Dummy data cleared.");
-    }
-  </script></body>
+        // Update goal table
+        function updateGoalTable() {
+            const tbody = document.getElementById('goalTableBody');
+            tbody.innerHTML = '';
+            goals.forEach(goal => {
+                const { daysLeft, percentAchieved, speedStatus } = calculateAnalytics(goal);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td contenteditable="true" onblur="editGoal('${goal.id}', 'name', this.innerText)">${goal.name}</td>
+                    <td>${goal.type}</td>
+                    <td>${goal.target}${goal.unit ? ` ${goal.unit}` : ''} (${goal.direction})</td>
+                    <td>${calculateProgress(goal)}</td>
+                    <td>${daysLeft}</td>
+                    <td>${percentAchieved.toFixed(1)}%</td>
+                    <td class="${speedStatus}">${speedStatus}</td>
+                    <td><button onclick="deleteGoal('${goal.id}')">Delete</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Calculate analytics
+        function calculateAnalytics(goal) {
+            const start = new Date(goal.startDate);
+            const end = new Date(goal.endDate);
+            const today = new Date();
+            const totalDays = (end - start) / (1000 * 60 * 60 * 24) + 1;
+            const daysLeft = Math.max(0, (end - today) / (1000 * 60 * 60 * 24));
+            const daysCompleted = totalDays - daysLeft;
+
+            let totalProgress = 0;
+            if (goal.type === 'normal') {
+                totalProgress = goal.progress.reduce((sum, p) => sum + p.value, 0);
+            } else if (goal.type === 'time') {
+                totalProgress = goal.progress.reduce((sum, p) => {
+                    const [h, m] = p.value.split(':').map(Number);
+                    return sum + (h * 60 + m);
+                }, 0);
+            } else {
+                totalProgress = goal.progress.filter(p => p.value === 'yes').length;
+            }
+
+            const percentAchieved = goal.type === 'yesno' ? 
+                (totalProgress / goal.progress.length * 100) || 0 :
+                (totalProgress / (goal.type === 'time' ? timeToMinutes(goal.target) : goal.target) * 100) || 0;
+
+            const speedRequired = (goal.type === 'time' ? timeToMinutes(goal.target) : goal.target) / totalDays;
+            const speedNow = daysCompleted ? totalProgress / daysCompleted : 0;
+            const speedStatus = speedNow >= speedRequired * 0.9 ? 'good' : speedNow >= speedRequired * 0.5 ? 'warning' : 'bad';
+
+            return { daysLeft: Math.round(daysLeft), percentAchieved, speedStatus };
+        }
+
+        // Calculate total progress for display
+        function calculateProgress(goal) {
+            if (goal.type === 'normal') {
+                const total = goal.progress.reduce((sum, p) => sum + p.value, 0);
+                return `${total} ${goal.unit}`;
+            } else if (goal.type === 'time') {
+                const totalMinutes = goal.progress.reduce((sum, p) => {
+                    const [h, m] = p.value.split(':').map(Number);
+                    return sum + (h * 60 + m);
+                }, 0);
+                return `${Math.floor(totalMinutes / 60)}:${(totalMinutes % 60).toString().padStart(2, '0')}`;
+            } else {
+                return `${goal.progress.filter(p => p.value === 'yes').length} Yes`;
+            }
+        }
+
+        // Convert time string to minutes
+        function timeToMinutes(time) {
+            const [h, m] = time.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        // Edit goal
+        function editGoal(id, field, value) {
+            const goal = goals.find(g => g.id === id);
+            if (field === 'name') goal.name = value;
+            updateGoalTable();
+            updateChart();
+        }
+
+        // Delete goal
+        function deleteGoal(id) {
+            goals = goals.filter(g => g.id !== id);
+            updateGoalTable();
+            updateProgressGoalDropdown();
+            updateChart();
+        }
+
+        // Update progress goal dropdown
+        function updateProgressGoalDropdown() {
+            const select = document.getElementById('progressGoal');
+            select.innerHTML = '<option value="">Select Goal</option>';
+            goals.forEach(goal => {
+                const option = document.createElement('option');
+                option.value = goal.id;
+                option.textContent = goal.name;
+                select.appendChild(option);
+            });
+            select.onchange = toggleProgressFields;
+        }
+
+        // Update chart
+        function updateChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            const data = goals.map(goal => ({
+                label: goal.name,
+                data: goal.progress.map(p => ({
+                    x: p.date,
+                    y: goal.type === 'normal' ? p.value :
+                       goal.type === 'time' ? timeToMinutes(p.value) :
+                       p.value === 'yes' ? 1 : 0
+                }))
+            }));
+
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: data.map((d, i) => ({
+                        label: d.label,
+                        data: d.data,
+                        borderColor: `hsl(${i * 60}, 70%, 50%)`,
+                        fill: false
+                    }))
+                },
+                options: {
+                    scales: {
+                        x: { type: 'time', time: { unit: 'day' } },
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Generate dummy data
+        function generateDummyData() {
+            const dummyGoals = [
+                { name: 'Walk 5000 Steps', type: 'normal', target: 5000, unit: 'steps', direction: 'atLeast', startDate: '2025-06-01', endDate: '2025-06-07', progress: [
+                    { date: '2025-06-01', value: 4000 }, { date: '2025-06-02', value: 5500 }
+                ]},
+                { name: 'Sleep by 11 PM', type: 'yesno', target: 'yes', direction: 'atMost', startDate: '2025-06-01', endDate: '2025-06-07', progress: [
+                    { date: '2025-06-01', value: 'yes' }, { date: '2025-06-02', value: 'no' }
+                ]},
+                { name: 'Study 2 Hours', type: 'time', target: '02:00', direction: 'atLeast', startDate: '2025-06-01', endDate: '2025-06-07', progress: [
+                    { date: '2025-06-01', value: '01:30' }, { date: '2025-06-02', value: '02:15' }
+                ]},
+                { name: 'Drink Water', type: 'normal', target: 8, unit: 'nos', direction: 'atLeast', startDate: '2025-06-01', endDate: '2025-06-07', progress: [
+                    { date: '2025-06-01', value: 6 }, { date: '2025-06-02', value: 8 }
+                ]},
+                { name: 'Meditate', type: 'yesno', target: 'yes', direction: 'atLeast', startDate: '2025-06-01', endDate: '2025-06-07', progress: [
+                    { date: '2025-06-01', value: 'yes' }, { date: '2025-06-02', value: 'yes' }
+                ]}
+            ];
+            goals = [...goals, ...dummyGoals.map(g => ({ ...g, id: Date.now().toString() + Math.random() }))];
+            updateGoalTable();
+            updateProgressGoalDropdown();
+            updateChart();
+        }
+
+        // Clear dummy data
+        function clearDummyData() {
+            goals = [];
+            updateGoalTable();
+            updateProgressGoalDropdown();
+            updateChart();
+        }
+
+        // Export to JSON
+        function exportToJSON() {
+            const dataStr = JSON.stringify(goals, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'goals.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Import from JSON
+        function importFromJSON(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    goals = JSON.parse(e.target.result);
+                    updateGoalTable();
+                    updateProgressGoalDropdown();
+                    updateChart();
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // Initialize
+        toggleGoalFields();
+        updateProgressGoalDropdown();
+    </script>
+</body>
 </html>
