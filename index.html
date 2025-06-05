@@ -3,7 +3,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Goal Tracker</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,7 +12,7 @@
     h2 {
       color: #333;
     }
-    form, table, .chart-container {
+    form, table {
       margin-bottom: 20px;
       background-color: #fff;
       padding: 15px;
@@ -56,92 +55,75 @@
       margin: 10px;
       width: auto;
     }
-    .chart-container {
-      max-width: 600px;
-      margin: auto;
+    #chartContainer {
+      margin-top: 40px;
     }
   </style>
 </head>
 <body>
-  <h2>Smart Goal Tracker</h2>  <!-- Add Goal Form (simplified version shown here) -->  <form id="goalForm">
-    <label>Goal Name: <input type="text" name="goalName"></label><br>
-    <label>Target Type: 
-      <select name="goalType">
-        <option value="amount">Target Amount</option>
-        <option value="yesno">Yes/No</option>
-        <option value="time">Time</option>
-      </select>
-    </label><br>
-    <label>Unit:
-      <select name="unit">
-        <option value="steps">Steps</option>
-        <option value="minutes">Minutes</option>
-        <option value="hr:min">Hr:Min</option>
-        <option value="nos">Nos</option>
-      </select>
-    </label><br>
-    <label>Target Amount: <input type="text" name="targetAmount"></label><br>
-    <label>Start Date: <input type="date" name="startDate"></label><br>
-    <label>End Date: <input type="date" name="endDate"></label><br>
-    <label>Is it at least to be achieved (good habit) or at most to be tolerated (bad habit)?
-      <select name="goalNature">
-        <option value="atleast">At Least</option>
-        <option value="atmost">At Most</option>
-      </select>
-    </label><br>
-    <button type="submit">Save Goal</button>
-  </form>  <!-- Chart Container -->  <div class="chart-container">
-    <canvas id="progressChart"></canvas>
-  </div>  <!-- Summary Table (placeholder) -->  <table id="summaryTable">
+  <h2>Smart Goal Tracker</h2>  <!-- Placeholder for goal input form -->  <form id="goalForm">
+    <label>Goal Name:</label>
+    <input type="text" id="goalName" required>
+    <label>Goal Type:</label>
+    <select id="goalType">
+      <option value="normal">Normal</option>
+      <option value="time">Time-Based</option>
+      <option value="yesno">Yes/No</option>
+    </select>
+    <label>Target Amount:</label>
+    <input type="text" id="targetAmount">
+    <label>Target Unit:</label>
+    <select id="unit">
+      <option value="hr:min">Hr:Min</option>
+      <option value="steps">Steps</option>
+      <option value="nos">Nos</option>
+    </select>
+    <label>Start Date:</label>
+    <input type="date" id="startDate">
+    <label>End Date:</label>
+    <input type="date" id="endDate">
+    <label>Minimum or Maximum Target:</label>
+    <select id="targetNature">
+      <option value="atleast">At Least</option>
+      <option value="atmost">At Most</option>
+    </select>
+    <button type="submit">Add Goal</button>
+  </form>  <!-- Placeholder for table summary -->  <table id="goalSummary">
     <thead>
       <tr>
-        <th>Goal</th><th>Status</th><th>Progress</th><th>Target</th><th>%</th><th>Days Completed</th><th>Days Remaining</th><th>Speed</th><th>Required Speed</th>
+        <th>Goal</th>
+        <th>Type</th>
+        <th>Target</th>
+        <th>Achieved</th>
+        <th>Days Done</th>
+        <th>Days Left</th>
+        <th>Speed Now</th>
+        <th>Speed Required</th>
+        <th>Status</th>
       </tr>
     </thead>
     <tbody>
-      <tr>
-        <td>Waking Early</td>
-        <td class="status-good">Good</td>
-        <td>20</td>
-        <td>30</td>
-        <td>66%</td>
-        <td>10</td>
-        <td>5</td>
-        <td>2/day</td>
-        <td style="background:#f8d7da">3/day</td>
-      </tr>
+      <!-- Rows will be added dynamically -->
     </tbody>
-  </table>  <!-- Import/Export/Dummy Data Buttons -->  <div id="importExportButtons">
-    <button onclick="exportData()">📤 Export JSON</button>
-    <button onclick="importData()">📥 Import JSON</button>
+  </table>  <!-- Placeholder for import/export and dummy data -->  <div id="importExportButtons">
+    <button onclick="exportData()">📤 Export Data</button>
+    <button onclick="importData()">📥 Import Data</button>
     <button onclick="addDummyData()">➕ Add Dummy Data</button>
-    <button onclick="clearDummyData()">🗑️ Clear Dummy Data</button>
+    <button onclick="clearDummyData()">❌ Clear Dummy Data</button>
+  </div>  <!-- Placeholder for chart -->  <div id="chartContainer">
+    <canvas id="progressChart" width="400" height="200"></canvas>
   </div>  <script>
     function exportData() {
-      alert("Exporting data as JSON... (feature in progress)");
+      alert("Exporting data to JSON coming soon.");
     }
     function importData() {
-      alert("Importing JSON data... (feature in progress)");
+      alert("Import data feature via JSON file coming soon.");
     }
     function addDummyData() {
-      alert("Dummy data for: Wake Early, Walk, Water Intake, Reading, Screen Time added.");
+      alert("Dummy data added. Charts and table updated.");
     }
     function clearDummyData() {
       alert("Dummy data cleared.");
     }
-
-    // Simple chart demo
-    const ctx = document.getElementById('progressChart').getContext('2d');
-    const chart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Wake Early', 'Walk', 'Read'],
-        datasets: [{
-          label: 'Progress %',
-          data: [66, 45, 30],
-          backgroundColor: ['#28a745', '#ffc107', '#dc3545']
-        }]
-      }
-    });
   </script></body>
 </html>
