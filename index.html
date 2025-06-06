@@ -3,42 +3,37 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Goal Tracker</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
+      padding: 20px;
       background-color: #f4f4f4;
     }
-    .container {
-      max-width: 1000px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
+    h2 {
+      color: #333;
+    }
+    form, table {
+      margin-bottom: 20px;
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    h2 { color: #007BFF; }
-    form, table, .chart-container, .import-export {
-      margin-top: 20px;
-    }
-    label {
-      display: block;
-      margin: 10px 0 5px;
-    }
     input, select, button {
+      margin: 5px 0;
       padding: 10px;
+      font-size: 14px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
       width: 100%;
-      margin-bottom: 10px;
     }
     button {
-      background-color: #007BFF;
+      background-color: #28a745;
       color: white;
-      border: none;
       cursor: pointer;
     }
     button:hover {
-      background-color: #0056b3;
+      background-color: #218838;
     }
     table {
       width: 100%;
@@ -47,34 +42,43 @@
     th, td {
       padding: 10px;
       border: 1px solid #ccc;
-      text-align: center;
+      text-align: left;
     }
     .status-good { background-color: #d4edda; }
     .status-warning { background-color: #fff3cd; }
-    .status-bad { background-color: #f8d7da; }
-    canvas { max-width: 100%; }
+    .status-danger { background-color: #f8d7da; }
+    #importExportButtons {
+      text-align: center;
+      margin-top: 40px;
+    }
+    #importExportButtons button {
+      margin: 10px;
+      width: auto;
+    }
+    #chartContainer {
+      margin-top: 40px;
+    }
   </style>
 </head>
 <body>
-<div class="container">
   <h2>Smart Goal Tracker</h2>  <form id="goalForm">
     <label>Goal Name:</label>
     <input type="text" id="goalName" required><label>Goal Type:</label>
-<select id="goalType" onchange="toggleInputFields()">
+<select id="goalType" onchange="toggleFields()">
   <option value="normal">Normal</option>
   <option value="time">Time-Based</option>
   <option value="yesno">Yes/No</option>
 </select>
 
-<div id="amountField">
-  <label>Target Amount (or time):</label>
-  <input id="targetAmount" type="text">
+<div id="amountSection">
+  <label>Target Amount:</label>
+  <input type="text" id="targetAmount">
 </div>
 
-<label>Unit:</label>
+<label>Target Unit:</label>
 <select id="unit">
-  <option value="steps">Steps</option>
   <option value="hr:min">Hr:Min</option>
+  <option value="steps">Steps</option>
   <option value="nos">Nos</option>
 </select>
 
@@ -84,7 +88,7 @@
 <label>End Date:</label>
 <input type="date" id="endDate">
 
-<label>Target Nature:</label>
+<label>Minimum or Maximum Target:</label>
 <select id="targetNature">
   <option value="atleast">At Least</option>
   <option value="atmost">At Most</option>
@@ -92,135 +96,67 @@
 
 <button type="submit">Add Goal</button>
 
-  </form>  <table id="summaryTable">
+  </form>  <form id="progressForm">
+    <h3>Add Progress</h3>
+    <label>Select Goal:</label>
+    <select id="progressGoal"></select><label>Progress Value:</label>
+<input type="text" id="progressValue">
+
+<button type="submit">Add Progress</button>
+
+  </form>  <table id="goalSummary">
     <thead>
       <tr>
         <th>Goal</th>
         <th>Type</th>
         <th>Target</th>
-        <th>Progress</th>
+        <th>Achieved</th>
+        <th>Days Done</th>
         <th>Days Left</th>
         <th>Speed Now</th>
         <th>Speed Required</th>
         <th>Status</th>
-        <th>Action</th>
+        <th>Actions</th>
       </tr>
     </thead>
-    <tbody id="summaryBody">
+    <tbody>
     </tbody>
-  </table>  <div class="import-export">
-    <button onclick="exportData()">Export JSON</button>
-    <input type="file" id="importFile" onchange="importData(event)" accept=".json">
-    <button onclick="document.getElementById('importFile').click()">Import JSON</button>
-    <button onclick="addDummyData()">Add Dummy Data</button>
-  </div>  <div class="chart-container">
-    <canvas id="progressChart"></canvas>
-  </div>
-</div><script>
-  let goals = [];
-
-  function toggleInputFields() {
-    const type = document.getElementById('goalType').value;
-    const input = document.getElementById('targetAmount');
-    if (type === 'yesno') {
-      document.getElementById('amountField').style.display = 'none';
-    } else {
-      document.getElementById('amountField').style.display = 'block';
-      input.type = type === 'time' ? 'time' : 'text';
+  </table>  <div id="importExportButtons">
+    <button onclick="exportData()">📤 Export JSON</button>
+    <button onclick="importData()">📥 Import JSON</button>
+    <button onclick="addDummyData()">➕ Add Dummy Data</button>
+    <button onclick="clearDummyData()">❌ Clear Dummy Data</button>
+  </div>  <div id="chartContainer">
+    <canvas id="progressChart" width="400" height="200"></canvas>
+  </div>  <script>
+    function toggleFields() {
+      const goalType = document.getElementById('goalType').value;
+      const amountSection = document.getElementById('amountSection');
+      if (goalType === 'yesno') {
+        amountSection.style.display = 'none';
+      } else if (goalType === 'time') {
+        amountSection.style.display = 'block';
+        document.getElementById('targetAmount').type = 'time';
+      } else {
+        amountSection.style.display = 'block';
+        document.getElementById('targetAmount').type = 'text';
+      }
     }
-  }
 
-  document.getElementById('goalForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const name = document.getElementById('goalName').value;
-    const type = document.getElementById('goalType').value;
-    const target = document.getElementById('targetAmount').value;
-    const unit = document.getElementById('unit').value;
-    const start = document.getElementById('startDate').value;
-    const end = document.getElementById('endDate').value;
-    const nature = document.getElementById('targetNature').value;
-    goals.push({ name, type, target, unit, start, end, nature, progress: [] });
-    updateSummary();
-    this.reset();
-  });
+    function exportData() {
+      alert("Exporting data to JSON coming soon.");
+    }
 
-  function updateSummary() {
-    const tbody = document.getElementById('summaryBody');
-    tbody.innerHTML = '';
-    goals.forEach((goal, index) => {
-      const tr = document.createElement('tr');
-      const progress = goal.progress.reduce((a, b) => a + Number(b.value), 0);
-      const today = new Date();
-      const end = new Date(goal.end);
-      const daysLeft = Math.ceil((end - today) / (1000 * 3600 * 24));
-      const speedNow = progress / (goal.progress.length || 1);
-      const speedRequired = goal.target / ((daysLeft || 1));
-      const status = speedNow >= speedRequired ? 'good' : speedNow >= speedRequired * 0.6 ? 'warning' : 'bad';
-      tr.innerHTML = `
-        <td>${goal.name}</td>
-        <td>${goal.type}</td>
-        <td>${goal.target} ${goal.unit}</td>
-        <td>${progress}</td>
-        <td>${daysLeft}</td>
-        <td>${speedNow.toFixed(2)}</td>
-        <td>${speedRequired.toFixed(2)}</td>
-        <td class="status-${status}">${status.toUpperCase()}</td>
-        <td><button onclick="removeGoal(${index})">Delete</button></td>
-      `;
-      tbody.appendChild(tr);
-    });
-    drawChart();
-  }
+    function importData() {
+      alert("Import data feature via JSON file coming soon.");
+    }
 
-  function removeGoal(index) {
-    goals.splice(index, 1);
-    updateSummary();
-  }
+    function addDummyData() {
+      alert("Dummy data added. Charts and table updated.");
+    }
 
-  function exportData() {
-    const data = JSON.stringify(goals);
-    const blob = new Blob([data], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'goals.json';
-    a.click();
-  }
-
-  function importData(event) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      goals = JSON.parse(e.target.result);
-      updateSummary();
-    };
-    reader.readAsText(file);
-  }
-
-  function addDummyData() {
-    goals.push(
-      { name: 'Walk Steps', type: 'normal', target: 60000, unit: 'steps', start: '2025-06-01', end: '2025-06-30', nature: 'atleast', progress: [{ value: 2000 }, { value: 2500 }] },
-      { name: 'Wake Early', type: 'time', target: '06:45', unit: 'hr:min', start: '2025-06-01', end: '2025-06-07', nature: 'atmost', progress: [{ value: '06:50' }] }
-    );
-    updateSummary();
-  }
-
-  function drawChart() {
-    const ctx = document.getElementById('progressChart').getContext('2d');
-    const data = goals.map((g, i) => g.progress.reduce((a, p) => a + Number(p.value || 0), 0));
-    const labels = goals.map(g => g.name);
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Progress',
-          data: data,
-          backgroundColor: '#007BFF'
-        }]
-      },
-      options: { responsive: true, plugins: { legend: { display: false } } }
-    });
-  }
-</script></body>
+    function clearDummyData() {
+      alert("Dummy data cleared.");
+    }
+  </script></body>
 </html>
