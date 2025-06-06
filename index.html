@@ -3,6 +3,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Goal Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -58,10 +59,32 @@
     #chartContainer {
       margin-top: 40px;
     }
+    #calendarView {
+      margin-top: 40px;
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    #filters {
+      margin-bottom: 20px;
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
   </style>
 </head>
 <body>
-  <h2>Smart Goal Tracker</h2>  <form id="goalForm">
+  <h2>Smart Goal Tracker</h2>  <div id="filters">
+    <label for="filterType">Filter by Type:</label>
+    <select id="filterType" onchange="filterGoals()">
+      <option value="all">All</option>
+      <option value="normal">Normal</option>
+      <option value="time">Time-Based</option>
+      <option value="yesno">Yes/No</option>
+    </select>
+  </div>  <form id="goalForm">
     <label>Goal Name:</label>
     <input type="text" id="goalName" required><label>Goal Type:</label>
 <select id="goalType" onchange="toggleFields()">
@@ -96,14 +119,6 @@
 
 <button type="submit">Add Goal</button>
 
-  </form>  <form id="progressForm">
-    <h3>Add Progress</h3>
-    <label>Select Goal:</label>
-    <select id="progressGoal"></select><label>Progress Value:</label>
-<input type="text" id="progressValue">
-
-<button type="submit">Add Progress</button>
-
   </form>  <table id="goalSummary">
     <thead>
       <tr>
@@ -119,44 +134,105 @@
         <th>Actions</th>
       </tr>
     </thead>
-    <tbody>
-    </tbody>
+    <tbody></tbody>
   </table>  <div id="importExportButtons">
     <button onclick="exportData()">📤 Export JSON</button>
-    <button onclick="importData()">📥 Import JSON</button>
+    <button onclick="document.getElementById('importFile').click()">📥 Import JSON</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
     <button onclick="addDummyData()">➕ Add Dummy Data</button>
     <button onclick="clearDummyData()">❌ Clear Dummy Data</button>
   </div>  <div id="chartContainer">
     <canvas id="progressChart" width="400" height="200"></canvas>
+  </div>  <div id="calendarView">
+    <h3>Calendar View (Coming Soon)</h3>
+    <p>This section will visually show progress entries across dates.</p>
   </div>  <script>
+    let goals = [];
+
     function toggleFields() {
       const goalType = document.getElementById('goalType').value;
       const amountSection = document.getElementById('amountSection');
       if (goalType === 'yesno') {
         amountSection.style.display = 'none';
-      } else if (goalType === 'time') {
-        amountSection.style.display = 'block';
-        document.getElementById('targetAmount').type = 'time';
       } else {
         amountSection.style.display = 'block';
-        document.getElementById('targetAmount').type = 'text';
+        document.getElementById('targetAmount').type = goalType === 'time' ? 'time' : 'text';
       }
     }
 
     function exportData() {
-      alert("Exporting data to JSON coming soon.");
+      const dataStr = JSON.stringify(goals, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'goals.json';
+      a.click();
     }
 
-    function importData() {
-      alert("Import data feature via JSON file coming soon.");
+    function importData(event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onload = e => {
+        goals = JSON.parse(e.target.result);
+        alert("Data imported successfully!");
+        filterGoals();
+        drawChart();
+      };
+      reader.readAsText(file);
     }
 
     function addDummyData() {
-      alert("Dummy data added. Charts and table updated.");
+      goals.push(
+        { name: "Walk 10000 Steps", type: "normal", target: 60000, unit: "steps" },
+        { name: "Wake Up Before 6:45", type: "time", target: "06:45", unit: "hr:min" },
+        { name: "Avoid Junk Food", type: "yesno", target: "yes", unit: "" }
+      );
+      alert("Dummy data added.");
+      filterGoals();
+      drawChart();
     }
 
     function clearDummyData() {
+      goals = [];
       alert("Dummy data cleared.");
+      filterGoals();
+      drawChart();
     }
+
+    function drawChart() {
+      const ctx = document.getElementById('progressChart').getContext('2d');
+      if (window.myChart) window.myChart.destroy();
+      window.myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: goals.map(g => g.name),
+          datasets: [{
+            label: 'Target Progress',
+            data: goals.map(g => g.target),
+            backgroundColor: 'rgba(54, 162, 235, 0.6)'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    function filterGoals() {
+      const filter = document.getElementById('filterType').value;
+      const tableBody = document.querySelector('#goalSummary tbody');
+      tableBody.innerHTML = '';
+      const filtered = filter === 'all' ? goals : goals.filter(g => g.type === filter);
+      filtered.forEach(g => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${g.name}</td><td>${g.type}</td><td>${g.target}</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td>`;
+        tableBody.appendChild(row);
+      });
+    }
+
+    // Initialize default filter view
+    filterGoals();
   </script></body>
 </html>
