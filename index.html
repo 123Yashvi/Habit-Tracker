@@ -59,32 +59,35 @@
     #chartContainer {
       margin-top: 40px;
     }
-    #calendarView {
-      margin-top: 40px;
-      background-color: #fff;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    #filters {
-      margin-bottom: 20px;
-      background-color: #fff;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    }
   </style>
 </head>
 <body>
-  <h2>Smart Goal Tracker</h2>  <div id="filters">
-    <label for="filterType">Filter by Type:</label>
-    <select id="filterType" onchange="filterGoals()">
-      <option value="all">All</option>
-      <option value="normal">Normal</option>
-      <option value="time">Time-Based</option>
-      <option value="yesno">Yes/No</option>
-    </select>
-  </div>  <form id="goalForm">
+  <h2>Smart Goal Tracker</h2>  <!-- Add Progress Section -->  <form id="progressForm">
+    <label for="progressGoal">Select Goal:</label>
+    <select id="progressGoal" required onchange="toggleProgressFields()"></select><div id="progressAmountSection">
+  <label for="progressAmount">Progress Amount:</label>
+  <input type="number" id="progressAmount">
+</div>
+
+<div id="progressTimeSection" style="display:none">
+  <label for="progressTime">Progress Time (HH:MM):</label>
+  <input type="time" id="progressTime">
+</div>
+
+<div id="progressYesNoSection" style="display:none">
+  <label for="progressYesNo">Did you do it?</label>
+  <select id="progressYesNo">
+    <option value="yes">Yes</option>
+    <option value="no">No</option>
+  </select>
+</div>
+
+<label for="progressDate">Date:</label>
+<input type="date" id="progressDate" required>
+
+<button type="submit">Add Progress</button>
+
+  </form>  <!-- Add Goal Section -->  <form id="goalForm">
     <label>Goal Name:</label>
     <input type="text" id="goalName" required><label>Goal Type:</label>
 <select id="goalType" onchange="toggleFields()">
@@ -143,9 +146,6 @@
     <button onclick="clearDummyData()">❌ Clear Dummy Data</button>
   </div>  <div id="chartContainer">
     <canvas id="progressChart" width="400" height="200"></canvas>
-  </div>  <div id="calendarView">
-    <h3>Calendar View (Coming Soon)</h3>
-    <p>This section will visually show progress entries across dates.</p>
   </div>  <script>
     let goals = [];
 
@@ -158,6 +158,13 @@
         amountSection.style.display = 'block';
         document.getElementById('targetAmount').type = goalType === 'time' ? 'time' : 'text';
       }
+    }
+
+    function toggleProgressFields() {
+      const goalType = document.querySelector('#progressGoal option:checked').dataset.type;
+      document.getElementById('progressAmount').parentElement.style.display = goalType === 'normal' ? 'block' : 'none';
+      document.getElementById('progressTimeSection').style.display = goalType === 'time' ? 'block' : 'none';
+      document.getElementById('progressYesNoSection').style.display = goalType === 'yesno' ? 'block' : 'none';
     }
 
     function exportData() {
@@ -176,8 +183,6 @@
       reader.onload = e => {
         goals = JSON.parse(e.target.result);
         alert("Data imported successfully!");
-        filterGoals();
-        drawChart();
       };
       reader.readAsText(file);
     }
@@ -189,21 +194,18 @@
         { name: "Avoid Junk Food", type: "yesno", target: "yes", unit: "" }
       );
       alert("Dummy data added.");
-      filterGoals();
       drawChart();
     }
 
     function clearDummyData() {
       goals = [];
       alert("Dummy data cleared.");
-      filterGoals();
       drawChart();
     }
 
     function drawChart() {
       const ctx = document.getElementById('progressChart').getContext('2d');
-      if (window.myChart) window.myChart.destroy();
-      window.myChart = new Chart(ctx, {
+      const chart = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: goals.map(g => g.name),
@@ -215,24 +217,11 @@
         },
         options: {
           responsive: true,
-          scales: { y: { beginAtZero: true } }
+          scales: {
+            y: { beginAtZero: true }
+          }
         }
       });
     }
-
-    function filterGoals() {
-      const filter = document.getElementById('filterType').value;
-      const tableBody = document.querySelector('#goalSummary tbody');
-      tableBody.innerHTML = '';
-      const filtered = filter === 'all' ? goals : goals.filter(g => g.type === filter);
-      filtered.forEach(g => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${g.name}</td><td>${g.type}</td><td>${g.target}</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td><td>--</td>`;
-        tableBody.appendChild(row);
-      });
-    }
-
-    // Initialize default filter view
-    filterGoals();
   </script></body>
 </html>
